@@ -33,6 +33,29 @@ screenGui.Name = "AuraTycoonHUD"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = PlayerGui
 
+-- Funzione helper per applicare effetti Hover/Click elastici (Juicy UI)
+local function applyJuicyHoverEffect(btn: TextButton)
+	local initialSize = btn.Size
+	
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+			Size = UDim2.new(initialSize.X.Scale, initialSize.X.Offset * 1.15, initialSize.Y.Scale, initialSize.Y.Offset * 1.15)
+		}):Play()
+	end)
+	
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = initialSize
+		}):Play()
+	end)
+	
+	btn.MouseButton1Down:Connect(function()
+		TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(initialSize.X.Scale, initialSize.X.Offset * 0.9, initialSize.Y.Scale, initialSize.Y.Offset * 0.9)
+		}):Play()
+	end)
+end
+
 -- ==========================================
 -- 1. PANNELLO HUD PRINCIPALE (A SINISTRA)
 -- ==========================================
@@ -119,6 +142,7 @@ openMenuBtn.TextSize = 14
 openMenuBtn.Parent = hudFrame
 
 Instance.new("UICorner", openMenuBtn).CornerRadius = UDim.new(0, 6)
+applyJuicyHoverEffect(openMenuBtn)
 
 shecklesVal.Changed:Connect(function(val) walletLabel.Text = "Portafoglio: " .. val .. " $" end)
 generatorVal.Changed:Connect(function(val) genLabel.Text = "Generatore: Lvl " .. val end)
@@ -155,6 +179,7 @@ closeBtn.TextColor3 = Color3.fromRGB(255, 0, 85)
 closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.TextSize = 18
 closeBtn.Parent = menuFrame
+applyJuicyHoverEffect(closeBtn)
 
 -- Azioni di apertura e chiusura del menu
 openMenuBtn.MouseButton1Click:Connect(function()
@@ -175,6 +200,7 @@ tabShopBtn.Font = Enum.Font.SourceSansBold
 tabShopBtn.TextSize = 13
 tabShopBtn.Parent = menuFrame
 Instance.new("UICorner", tabShopBtn).CornerRadius = UDim.new(0, 6)
+applyJuicyHoverEffect(tabShopBtn)
 
 local tabTradeBtn = Instance.new("TextButton")
 tabTradeBtn.Size = UDim2.new(0, 180, 0, 35)
@@ -186,6 +212,7 @@ tabTradeBtn.Font = Enum.Font.SourceSansBold
 tabTradeBtn.TextSize = 13
 tabTradeBtn.Parent = menuFrame
 Instance.new("UICorner", tabTradeBtn).CornerRadius = UDim.new(0, 6)
+applyJuicyHoverEffect(tabTradeBtn)
 
 -- CONTENITORE TAB SHOP
 local shopTabFrame = Instance.new("Frame")
@@ -233,6 +260,7 @@ gachaBtn.Font = Enum.Font.SourceSansBold
 gachaBtn.TextSize = 14
 gachaBtn.Parent = shopTabFrame
 Instance.new("UICorner", gachaBtn).CornerRadius = UDim.new(0, 6)
+applyJuicyHoverEffect(gachaBtn)
 
 local resultLabel = Instance.new("TextLabel")
 resultLabel.Size = UDim2.new(0, 180, 0, 30)
@@ -254,6 +282,7 @@ upgradeDefBtn.Font = Enum.Font.SourceSansBold
 upgradeDefBtn.TextSize = 13
 upgradeDefBtn.Parent = shopTabFrame
 Instance.new("UICorner", upgradeDefBtn).CornerRadius = UDim.new(0, 6)
+applyJuicyHoverEffect(upgradeDefBtn)
 
 local function updateDefenderButtonText()
 	local currentTier = defenderVal.Value
@@ -677,6 +706,7 @@ sprintStroke.Color = Color3.fromRGB(255, 255, 255)
 sprintStroke.Thickness = 1.5
 sprintStroke.Transparency = 0.5
 sprintStroke.Parent = sprintBtn
+applyJuicyHoverEffect(sprintBtn)
 
 local function getHumanoid(): Humanoid?
 	local char = player.Character
@@ -825,6 +855,7 @@ slapStroke.Color = Color3.fromRGB(255, 255, 255)
 slapStroke.Thickness = 1.5
 slapStroke.Transparency = 0.5
 slapStroke.Parent = slapBtn
+applyJuicyHoverEffect(slapBtn)
 
 local lastSlapTime = 0
 local SLAP_COOLDOWN_CLIENT = 0.5
@@ -894,5 +925,62 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 slapBtn.MouseButton1Click:Connect(triggerSlapAttack)
+
+-- ==========================================
+-- 6. EFFETTI TELECAMERA DINAMICI (FOV, BOBBING) E ROTAZIONE AUREE 3D
+-- ==========================================
+local RunService = game:GetService("RunService")
+local camera = game:GetService("Workspace").CurrentCamera
+
+local targetFOV = 70
+local currentFOV = 70
+
+RunService.RenderStepped:Connect(function(deltaTime)
+	local char = player.Character
+	if not char then return end
+	
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	local hrp = char:FindFirstChild("HumanoidRootPart") :: Part?
+	
+	-- 1. ROTAZIONE E OSCILLAZIONE ANELLI NEON 3D (AUREE) A 60 FPS
+	if hrp then
+		local ring1 = char:FindFirstChild("AuraRing1")
+		local ring2 = char:FindFirstChild("AuraRing2")
+		
+		if ring1 then
+			local weld = ring1:FindFirstChild("AuraRing1Weld") :: Weld?
+			if weld then
+				-- Rotazione continua su asse Z del cilindro e oscillazione sinusoidale
+				weld.C0 = CFrame.new(0, math.sin(os.clock() * 3.5) * 0.35, 0)
+					* CFrame.Angles(math.rad(90) + math.sin(os.clock() * 1.5) * 0.1, 0, os.clock() * 3)
+			end
+		end
+		
+		if ring2 then
+			local weld = ring2:FindFirstChild("AuraRing2Weld") :: Weld?
+			if weld then
+				-- Rotazione inversa inclinata ad orbita planetaria
+				weld.C0 = CFrame.new(0, math.cos(os.clock() * 3.5) * 0.25, 0)
+					* CFrame.Angles(math.rad(45) + math.cos(os.clock() * 1.5) * 0.1, os.clock() * -2.2, 0)
+			end
+		end
+	end
+	
+	-- 2. GESTIONE FOV ZOOM DINAMICO (SENSAZIONE DI VELOCITÀ)
+	if hum and camera then
+		local isSprinting = (hum.WalkSpeed > 20) and (hum.MoveDirection.Magnitude > 0)
+		targetFOV = isSprinting and 85 or 70
+		
+		-- Interpolazione morbida del FOV (Lerp)
+		currentFOV = currentFOV + (targetFOV - currentFOV) * math.min(deltaTime * 10, 1)
+		camera.FieldOfView = currentFOV
+		
+		-- 3. HEAD-BOBBING (DONDOLIO PASSI IN CORSA)
+		if isSprinting then
+			local bobbing = math.abs(math.sin(os.clock() * 14)) * 0.18
+			camera.CFrame = camera.CFrame * CFrame.new(0, bobbing, 0)
+		end
+	end
+end)
 
 return {}

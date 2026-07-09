@@ -109,8 +109,51 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 			clone.Parent = hrp
 			print("[GachaService] Caricato asset aura da cartella Assets: " .. assetName)
 		else
-			-- Fallback procedurale se l'utente non ha ancora compilato gli Assets o in offline test
+			-- Fallback procedurale se l'utente non ha ancora compilato gli Assets (Genera Anelli 3D e Shell per look AAA)
+			local function createNeonRing(name: string, size: Vector3, color: Color3, transparency: number)
+				local ring = Instance.new("Part")
+				ring.Name = name
+				ring.Size = size
+				ring.Shape = Enum.PartType.Cylinder
+				ring.Color = color
+				ring.Material = Enum.Material.Neon
+				ring.Transparency = transparency
+				ring.CanCollide = false
+				ring.Massless = true
+				ring.Parent = character
+				
+				local weld = Instance.new("Weld")
+				weld.Name = name .. "Weld"
+				weld.Part0 = hrp
+				weld.Part1 = ring
+				-- Ruota inizialmente per far sdraiare il cilindro ad anello
+				weld.C0 = CFrame.Angles(math.rad(90), 0, 0)
+				weld.Parent = ring
+			end
+			
+			local function createGlassShell(color: Color3, transparency: number)
+				local shell = Instance.new("Part")
+				shell.Name = "AuraShell"
+				shell.Size = Vector3.new(5.5, 5.5, 5.5)
+				shell.Shape = Enum.PartType.Ball
+				shell.Color = color
+				shell.Material = Enum.Material.Glass
+				shell.Transparency = transparency
+				shell.CanCollide = false
+				shell.Massless = true
+				shell.Parent = character
+				
+				local weld = Instance.new("Weld")
+				weld.Name = "ShellWeld"
+				weld.Part0 = hrp
+				weld.Part1 = shell
+				weld.Parent = shell
+			end
+
 			if cosmeticName == "Aura Grigia" then
+				createNeonRing("AuraRing1", Vector3.new(0.2, 5, 5), Color3.fromRGB(150, 150, 150), 0.85)
+				createNeonRing("AuraRing2", Vector3.new(0.15, 4.2, 4.2), Color3.fromRGB(100, 100, 100), 0.9)
+				
 				local emitter = Instance.new("ParticleEmitter")
 				emitter.Name = "CosmeticAura"
 				emitter.Color = ColorSequence.new(Color3.fromRGB(150, 150, 150))
@@ -118,9 +161,13 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 				emitter.Lifetime = NumberRange.new(1.5, 2)
 				emitter.Rate = 15
 				emitter.Speed = NumberRange.new(2, 4)
-				emitter.Texture = "rbxassetid://1084969986" -- Scia di vento stilizzata
+				emitter.Texture = "rbxassetid://1084969986"
 				emitter.Parent = hrp
 			elseif cosmeticName == "Neon Ciano Aura" then
+				createNeonRing("AuraRing1", Vector3.new(0.25, 5.2, 5.2), Color3.fromRGB(0, 240, 255), 0.8)
+				createNeonRing("AuraRing2", Vector3.new(0.2, 4.5, 4.5), Color3.fromRGB(0, 150, 255), 0.85)
+				createGlassShell(Color3.fromRGB(0, 240, 255), 0.95)
+				
 				local emitter = Instance.new("ParticleEmitter")
 				emitter.Name = "CosmeticAura"
 				emitter.Color = ColorSequence.new(Color3.fromRGB(0, 240, 255))
@@ -132,9 +179,13 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 				emitter.Lifetime = NumberRange.new(1, 1.5)
 				emitter.Rate = 25
 				emitter.Speed = NumberRange.new(1, 3)
-				emitter.Texture = "rbxassetid://6051722880" -- Anello energetico splendente
+				emitter.Texture = "rbxassetid://6051722880"
 				emitter.Parent = hrp
 			elseif cosmeticName == "★ Golden Aura" then
+				createNeonRing("AuraRing1", Vector3.new(0.3, 5.5, 5.5), Color3.fromRGB(255, 215, 0), 0.75)
+				createNeonRing("AuraRing2", Vector3.new(0.2, 4.8, 4.8), Color3.fromRGB(255, 180, 0), 0.8)
+				createGlassShell(Color3.fromRGB(255, 215, 0), 0.93)
+				
 				local emitter = Instance.new("ParticleEmitter")
 				emitter.Name = "CosmeticAura"
 				emitter.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0))
@@ -147,7 +198,7 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 				emitter.Rate = 35
 				emitter.Speed = NumberRange.new(1, 4)
 				emitter.SpreadAngle = Vector2.new(10, 10)
-				emitter.Texture = "rbxassetid://258129519" -- Stelle/Scintille dorate HD
+				emitter.Texture = "rbxassetid://258129519"
 				emitter.Parent = hrp
 			end
 		end

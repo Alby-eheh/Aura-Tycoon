@@ -286,7 +286,7 @@ local function configureLighting()
 	
 	-- Pulisci eventuali vecchi effetti
 	for _, child in ipairs(Lighting:GetChildren()) do
-		if child:IsA("BloomEffect") or child:IsA("ColorCorrectionEffect") or child:IsA("Atmosphere") or child:IsA("SunRaysEffect") then
+		if child:IsA("BloomEffect") or child:IsA("ColorCorrectionEffect") or child:IsA("Atmosphere") or child:IsA("SunRaysEffect") or child:IsA("DepthOfFieldEffect") then
 			child:Destroy()
 		end
 	end
@@ -330,6 +330,15 @@ local function configureLighting()
 	sunRays.Intensity = 0.15
 	sunRays.Spread = 0.7
 	sunRays.Parent = Lighting
+	
+	-- 5. DepthOfField (Sfocatura dello sfondo lontano tipo cinema/fotografia)
+	local dof = Instance.new("DepthOfFieldEffect")
+	dof.Name = "AutoDepthOfField"
+	dof.FocusDistance = 25
+	dof.InFocusRadius = 15
+	dof.NearIntensity = 0.05
+	dof.FarIntensity = 0.35
+	dof.Parent = Lighting
 	
 	print("[MapService] Illuminazione e Post-Processing configurati automaticamente!")
 end
