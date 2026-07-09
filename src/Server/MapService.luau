@@ -1,10 +1,11 @@
 --!strict
 -- MapService.luau
--- Generatore procedurale di lotti, pulsanti fisici, audio spaziale e particelle.
+-- Generatore procedurale di lotti, pulsanti fisici, audio spaziale, particelle e tabellone centrale 3D.
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MapService = {}
 local mapFolder: Folder
@@ -29,6 +30,10 @@ local BOING_SOUND_ID = "rbxassetid://12221946"
 
 local activePlots = {} -- Mappa PlotNumber -> { Owner: Player, PlotPart: Part, GnomePart: Part? }
 local debounces = {} -- Mappa Player -> boolean
+
+-- Riferimenti ai TextLabel del tabellone centrale per gli aggiornamenti a caldo
+local momentsLabelFront: TextLabel? = nil
+local momentsLabelBack: TextLabel? = nil
 
 -- Crea un'etichetta 3D fluttuante (BillboardGui) per i pad
 local function createFloatingLabel(parent: Part, text: string, color: Color3)
@@ -107,7 +112,7 @@ local function generatePlot(plotNumber: number)
 	upgradePad.Parent = mapFolder
 	createFloatingLabel(upgradePad, "UPGRADE GEN\n(Costo: Dinamico)", Color3.fromRGB(0, 240, 255))
 
-	-- 4. Gnome Shield Pad (Neon Giallo) per comprare lo Gnomo
+	-- 4. Gnome Shield Pad (Neon Giallo) per comprare/potenziare il difensore
 	local gnomePad = Instance.new("Part")
 	gnomePad.Name = "GnomePad"
 	gnomePad.Size = Vector3.new(6, 0.4, 6)
@@ -143,7 +148,6 @@ local function generatePlot(plotNumber: number)
 		local player = Players:GetPlayerFromCharacter(character)
 		if not player then return end
 		
-		-- Verifica che sia il proprietario di questo lotto
 		local plotData = activePlots[plotNumber]
 		if plotData and plotData.Owner == player then
 			runWithDebounce(player, function()
@@ -183,7 +187,7 @@ local function generatePlot(plotNumber: number)
 			runWithDebounce(player, function()
 				local TycoonService = require(ServerScriptService.TycoonService)
 				TycoonService.upgradeGenerator(player)
-				claimSound:Play() -- riusa suono moneta
+				claimSound:Play()
 			end)
 		end
 	end)
@@ -221,10 +225,7 @@ local function generatePlot(plotNumber: number)
 					
 					raidSound:Play()
 					
-					-- Esegui l'evento del raid sul server
-					local RaidService = require(ServerScriptService.RaidService)
-					-- Simula l'evento lanciando la chiamata sul server
-					local remote = game:GetService("ReplicatedStorage"):FindFirstChild("ExecuteRaidRemote")
+					local remote = ReplicatedStorage:FindFirstChild("ExecuteRaidRemote")
 					if remote and remote:IsA("RemoteEvent") then
 						remote:FireServer(targetPlayer)
 					end
@@ -251,11 +252,10 @@ local function assignPlotToPlayer(player: Player)
 			player:SetAttribute("PlotId", i)
 			print("[MapService] Lotto #" .. i .. " assegnato a " .. player.Name)
 			
-			-- Teletrasporta il personaggio sul suo lotto base
 			local char = player.Character or player.CharacterAdded:Wait()
 			local hrp = char:WaitForChild("HumanoidRootPart")
 			if hrp then
-				task.wait(0.5) -- Attendi caricamento
+				task.wait(0.5)
 				hrp.CFrame = CFrame.new(PLOT_COORDINATES[i] + Vector3.new(0, 4, 0))
 			end
 			break
@@ -279,23 +279,100 @@ local function releasePlot(player: Player)
 	end
 end
 
--- Inizializza i 4 lotti fisici nel Workspace
+-- Inizializza i lotti e crea il Tabellone Moments 3D centrale
 function MapService.init()
 	mapFolder = Instance.new("Folder")
 	mapFolder.Name = "HostileTycoonMap"
 	mapFolder.Parent = Workspace
 	
-	print("[MapService] Generazione procedurale dei 4 Plot...")
+	print("[MapService] Generazione procedurale dei lotti e del monumento centrale...")
+	
+	-- Genera i 4 lotti
 	for i = 1, 4 do
 		generatePlot(i)
 	end
 	
+	-- 1. Genera pilastro del tabellone centrale
+	local pillar = Instance.new("Part")
+	pillar.Name = "BillboardPillar"
+	pillar.Size = Vector3.new(4, 15, 4)
+	pillar.Position = Vector3.new(0, 7.5, 0)
+	pillar.Color = Color3.fromRGB(60, 60, 70)
+	pillar.Material = Enum.Material.Concrete
+	pillar.Anchored = true
+	pillar.Parent = mapFolder
+
+	-- 2. Genera pannello schermo del tabellone
+	local display = Instance.new("Part")
+	display.Name = "BillboardDisplay"
+	display.Size = Vector3.new(26, 11, 1.2)
+	display.Position = Vector3.new(0, 16.5, 0)
+	display.Color = Color3.fromRGB(15, 15, 25)
+	display.Material = Enum.Material.SmoothPlastic
+	display.Anchored = true
+	display.Parent = mapFolder
+
+	-- 3. SurfaceGui sul FRONTE dello schermo
+	local sgFront = Instance.new("SurfaceGui")
+	sgFront.Name = "FeedFront"
+	sgFront.Face = Enum.NormalId.Front
+	sgFront.SizingMode = Enum.SurfaceGuiSizingMode.Pixels
+	sgFront.Parent = display
+
+	local textFront = Instance.new("TextLabel")
+	textFront.Size = UDim2.new(1, 0, 1, 0)
+	textFront.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	textFront.BackgroundTransparency = 0.05
+	textFront.Text = "\n★ LIVE FEED MOMENTS ★\n\nNessun raid registrato per ora."
+	textFront.TextColor3 = Color3.fromRGB(0, 240, 255)
+	textFront.TextSize = 20
+	textFront.Font = Enum.Font.SourceSansBold
+	textFront.TextWrapped = true
+	textFront.Parent = sgFront
+	momentsLabelFront = textFront
+
+	-- 4. SurfaceGui sul RETRO dello schermo
+	local sgBack = Instance.new("SurfaceGui")
+	sgBack.Name = "FeedBack"
+	sgBack.Face = Enum.NormalId.Back
+	sgBack.SizingMode = Enum.SurfaceGuiSizingMode.Pixels
+	sgBack.Parent = display
+
+	local textBack = Instance.new("TextLabel")
+	textBack.Size = UDim2.new(1, 0, 1, 0)
+	textBack.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	textBack.BackgroundTransparency = 0.05
+	textBack.Text = "\n★ LIVE FEED MOMENTS ★\n\nNessun raid registrato per ora."
+	textBack.TextColor3 = Color3.fromRGB(0, 240, 255)
+	textBack.TextSize = 20
+	textBack.Font = Enum.Font.SourceSansBold
+	textBack.TextWrapped = true
+	textBack.Parent = sgBack
+	momentsLabelBack = textBack
+
 	-- Gestisci i giocatori correnti ed entranti
 	Players.PlayerAdded:Connect(assignPlotToPlayer)
 	Players.PlayerRemoving:Connect(releasePlot)
 	
 	for _, player in ipairs(Players:GetPlayers()) do
 		task.spawn(assignPlotToPlayer, player)
+	end
+end
+
+-- Aggiorna la scritta sul tabellone centrale visibile in 3D
+function MapService.updateBillboardFeed(text: string)
+	local formattedText = "\n★ LIVE FEED MOMENTS ★\n\n" .. text
+	if momentsLabelFront then
+		momentsLabelFront.Text = formattedText
+	end
+	if momentsLabelBack then
+		momentsLabelBack.Text = formattedText
+	end
+	
+	-- Invia segnale a tutti i client per notificare
+	local remote = ReplicatedStorage:FindFirstChild("UpdateMomentsBillboard")
+	if remote and remote:IsA("RemoteEvent") then
+		remote:FireAllClients(text)
 	end
 end
 
@@ -307,7 +384,6 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 	local plotData = activePlots[plotId]
 	if not plotData then return end
 	
-	-- Pulisci difensore precedente se attivo
 	if plotData.GnomePart then
 		plotData.GnomePart:Destroy()
 		plotData.GnomePart = nil
@@ -332,8 +408,6 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 			labelColor = Color3.fromRGB(255, 196, 0)
 		end
 		
-		-- Prova a clonare dall'Assets Folder in ReplicatedStorage
-		local ReplicatedStorage = game:GetService("ReplicatedStorage")
 		local assets = ReplicatedStorage:FindFirstChild("Assets")
 		local defendersFolder = assets and assets:FindFirstChild("Defenders")
 		local targetTemplate = defendersFolder and defendersFolder:FindFirstChild(defenderName)
@@ -347,7 +421,6 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 			cloneInstance.Parent = mapFolder
 			print("[MapService] Spawnato difensore reale da Assets: " .. defenderName)
 		else
-			-- Fallback procedurale se l'utente non ha ancora compilato gli Assets o in offline test
 			local fallbackPart = Instance.new("Part")
 			fallbackPart.Name = defenderName
 			fallbackPart.Size = tier == 4 and Vector3.new(2.5, 3.5, 2.5) or Vector3.new(2, 3, 2)
@@ -376,7 +449,6 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 		
 		plotData.GnomePart = cloneInstance
 		
-		-- Aggiungi l'etichetta 3D fluttuante sul modello/part
 		local labelPart = cloneInstance:IsA("Model") and (cloneInstance.PrimaryPart or cloneInstance:FindFirstChildWhichIsA("BasePart")) or cloneInstance
 		if labelPart and labelPart:IsA("Part") then
 			createFloatingLabel(labelPart, labelText, labelColor)
@@ -391,7 +463,6 @@ function MapService.playGnomeDefenseEffect(player: Player)
 	local plotData = activePlots[plotId]
 	if not plotData or not plotData.PlotPart then return end
 	
-	-- Spawna suono di molla spaziale
 	local sound = Instance.new("Sound")
 	sound.SoundId = BOING_SOUND_ID
 	sound.Volume = 1.0
@@ -399,13 +470,12 @@ function MapService.playGnomeDefenseEffect(player: Player)
 	sound:Play()
 	sound.Ended:Connect(function() sound:Destroy() end)
 	
-	-- Spawna effetto particelle esplosione dorata
 	local attachment = Instance.new("Attachment")
 	attachment.Position = Vector3.new(0, 2, 0)
 	attachment.Parent = plotData.PlotPart
 	
 	local emitter = Instance.new("ParticleEmitter")
-	emitter.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0)) -- Oro
+	emitter.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0))
 	emitter.Size = NumberSequence.new(1.5, 3.5)
 	emitter.Speed = NumberRange.new(15, 35)
 	emitter.Rate = 120

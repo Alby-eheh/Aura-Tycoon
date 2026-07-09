@@ -343,20 +343,78 @@ end
 
 -- Gestione del Bottone di Roll Gacha
 gachaBtn.MouseButton1Click:Connect(function()
+	if not gachaBtn.Active then return end
+	gachaBtn.Active = false
+	
+	local initialText = gachaBtn.Text
+	local initialPosition = gachaBtn.Position
+	local initialColor = gachaBtn.BackgroundColor3
+	
+	-- 1. Avvia animazione di tremolio (Shake) e flash neon
+	task.spawn(function()
+		local endTime = os.clock() + 1.2
+		while os.clock() < endTime do
+			local offsetX = math.random(-6, 6)
+			local offsetY = math.random(-4, 4)
+			gachaBtn.Position = initialPosition + UDim2.new(0, offsetX, 0, offsetY)
+			
+			-- Flashing neon colors
+			local r = math.random(120, 255)
+			local g = math.random(0, 80)
+			local b = math.random(180, 255)
+			gachaBtn.BackgroundColor3 = Color3.fromRGB(r, g, b)
+			
+			task.wait(0.04)
+		end
+		gachaBtn.Position = initialPosition
+		gachaBtn.BackgroundColor3 = initialColor
+	end)
+	
+	gachaBtn.Text = "UNBOXING..."
+	resultLabel.Text = "Estrazione in corso..."
+	resultLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+	resultLabel.TextSize = 13
+	
+	-- 2. Invocazione server sincrona con cooldown minimo
+	local startTime = os.clock()
 	local openGachaRemote = ReplicatedStorage:WaitForChild("OpenGachaRemote") :: RemoteFunction
 	local result = openGachaRemote:InvokeServer()
 	
+	local elapsed = os.clock() - startTime
+	if elapsed < 1.2 then
+		task.wait(1.2 - elapsed) -- Attendi fine dell'animazione di shake
+	end
+	
+	-- Riavvia bottoni
+	gachaBtn.Active = true
+	gachaBtn.Text = initialText
+	
+	-- 3. Rivelazione cosmetico con dissolvenza ed esplosione di testo (Tween)
 	if result and result.Success then
 		resultLabel.Text = "Sbloccato: " .. result.Item
 		resultLabel.TextColor3 = result.Rarity == "legendary" and Color3.fromRGB(255, 196, 0) or 
 		                         result.Rarity == "rare" and Color3.fromRGB(0, 240, 255) or Color3.fromRGB(200, 200, 200)
 		
-		-- Aggiorna attributi locali ed inventario GUI
+		resultLabel.TextTransparency = 1
+		resultLabel.TextSize = 22
+		
+		local tween = TweenService:Create(resultLabel, TweenInfo.new(0.4, Enum.EasingStyle.BackOut), {
+			TextTransparency = 0,
+			TextSize = 14
+		})
+		tween:Play()
+		
 		player:SetAttribute("Inventory", result.Inventory)
 		refreshInventoryUI()
 	else
 		resultLabel.Text = result and result.Error or "Errore di connessione"
 		resultLabel.TextColor3 = Color3.fromRGB(255, 0, 85)
+		
+		resultLabel.TextTransparency = 1
+		local tween = TweenService:Create(resultLabel, TweenInfo.new(0.3, Enum.EasingStyle.QuadOut), {
+			TextTransparency = 0
+		})
+		tween:Play()
 	end
 end)
 

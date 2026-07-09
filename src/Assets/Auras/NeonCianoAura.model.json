@@ -1,0 +1,16 @@
+{
+  "ClassName": "ParticleEmitter",
+  "Properties": {
+    "Name": "CosmeticAura",
+    "Rate": 25,
+    "LightEmission": 0.8,
+    "Speed": {
+      "Min": 1,
+      "Max": 3
+    },
+    "Lifetime": {
+      "Min": 1,
+      "Max": 1.5
+    }
+  }
+}

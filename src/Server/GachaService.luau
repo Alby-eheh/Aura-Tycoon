@@ -44,45 +44,82 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 	end
 
 	-- 2. Applica la nuova aurora/tag
+	local assetName = nil
 	if cosmeticName == "Aura Grigia" then
-		local emitter = Instance.new("ParticleEmitter")
-		emitter.Name = "CosmeticAura"
-		emitter.Color = ColorSequence.new(Color3.fromRGB(150, 150, 150))
-		emitter.Size = NumberSequence.new(1.5)
-		emitter.Lifetime = NumberRange.new(1.5, 2)
-		emitter.Rate = 15
-		emitter.Speed = NumberRange.new(2, 4)
-		emitter.Parent = hrp
-		
+		assetName = "AuraGrigia"
 	elseif cosmeticName == "Neon Ciano Aura" then
-		local emitter = Instance.new("ParticleEmitter")
-		emitter.Name = "CosmeticAura"
-		emitter.Color = ColorSequence.new(Color3.fromRGB(0, 240, 255))
-		emitter.Size = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 2),
-			NumberSequenceKeypoint.new(1, 0)
-		})
-		emitter.LightEmission = 0.8
-		emitter.Lifetime = NumberRange.new(1, 1.5)
-		emitter.Rate = 25
-		emitter.Speed = NumberRange.new(1, 3)
-		emitter.Parent = hrp
-		
+		assetName = "NeonCianoAura"
 	elseif cosmeticName == "★ Golden Aura" then
-		local emitter = Instance.new("ParticleEmitter")
-		emitter.Name = "CosmeticAura"
-		emitter.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0))
-		emitter.Size = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 2.5),
-			NumberSequenceKeypoint.new(1, 0.5)
-		})
-		emitter.LightEmission = 1.0
-		emitter.Lifetime = NumberRange.new(1, 2)
-		emitter.Rate = 35
-		emitter.Speed = NumberRange.new(1, 4)
-		emitter.SpreadAngle = Vector2.new(10, 10)
-		emitter.Parent = hrp
+		assetName = "GoldenAura"
+	end
+	
+	if assetName then
+		local assets = ReplicatedStorage:FindFirstChild("Assets")
+		local aurasFolder = assets and assets:FindFirstChild("Auras")
+		local template = aurasFolder and aurasFolder:FindFirstChild(assetName)
 		
+		if template then
+			local clone = template:Clone()
+			-- Assicura colorazioni e parametri dinamici corretti
+			if cosmeticName == "Aura Grigia" then
+				clone.Color = ColorSequence.new(Color3.fromRGB(150, 150, 150))
+				clone.Size = NumberSequence.new(1.5)
+			elseif cosmeticName == "Neon Ciano Aura" then
+				clone.Color = ColorSequence.new(Color3.fromRGB(0, 240, 255))
+				clone.Size = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 2),
+					NumberSequenceKeypoint.new(1, 0)
+				})
+			elseif cosmeticName == "★ Golden Aura" then
+				clone.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0))
+				clone.Size = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 2.5),
+					NumberSequenceKeypoint.new(1, 0.5)
+				})
+				clone.SpreadAngle = Vector2.new(10, 10)
+			end
+			clone.Parent = hrp
+			print("[GachaService] Caricato asset aura da cartella Assets: " .. assetName)
+		else
+			-- Fallback procedurale se l'utente non ha ancora compilato gli Assets o in offline test
+			if cosmeticName == "Aura Grigia" then
+				local emitter = Instance.new("ParticleEmitter")
+				emitter.Name = "CosmeticAura"
+				emitter.Color = ColorSequence.new(Color3.fromRGB(150, 150, 150))
+				emitter.Size = NumberSequence.new(1.5)
+				emitter.Lifetime = NumberRange.new(1.5, 2)
+				emitter.Rate = 15
+				emitter.Speed = NumberRange.new(2, 4)
+				emitter.Parent = hrp
+			elseif cosmeticName == "Neon Ciano Aura" then
+				local emitter = Instance.new("ParticleEmitter")
+				emitter.Name = "CosmeticAura"
+				emitter.Color = ColorSequence.new(Color3.fromRGB(0, 240, 255))
+				emitter.Size = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 2),
+					NumberSequenceKeypoint.new(1, 0)
+				})
+				emitter.LightEmission = 0.8
+				emitter.Lifetime = NumberRange.new(1, 1.5)
+				emitter.Rate = 25
+				emitter.Speed = NumberRange.new(1, 3)
+				emitter.Parent = hrp
+			elseif cosmeticName == "★ Golden Aura" then
+				local emitter = Instance.new("ParticleEmitter")
+				emitter.Name = "CosmeticAura"
+				emitter.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0))
+				emitter.Size = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 2.5),
+					NumberSequenceKeypoint.new(1, 0.5)
+				})
+				emitter.LightEmission = 1.0
+				emitter.Lifetime = NumberRange.new(1, 2)
+				emitter.Rate = 35
+				emitter.Speed = NumberRange.new(1, 4)
+				emitter.SpreadAngle = Vector2.new(10, 10)
+				emitter.Parent = hrp
+			end
+		end
 	elseif cosmeticName == "Tag Pro Voxel" and head then
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "CosmeticTag"

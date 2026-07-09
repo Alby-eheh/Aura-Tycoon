@@ -43,6 +43,10 @@ raidRemote.OnServerEvent:Connect(function(player: Player, targetPlayer: Player)
 		local MapService = require(ServerScriptService:WaitForChild("MapService"))
 		MapService.playGnomeDefenseEffect(targetPlayer)
 		
+		-- Registra il fallimento del raid sul tabellone centrale
+		local MomentsService = require(ServerScriptService:WaitForChild("MomentsService"))
+		MomentsService.recordFailedRaid(player, targetPlayer, targetDefenderTier)
+		
 		-- Penalizzazione del raider e lancio fisico sul client
 		player:SetAttribute("Stunned", true)
 		
