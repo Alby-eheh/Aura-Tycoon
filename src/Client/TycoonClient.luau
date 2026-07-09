@@ -821,33 +821,25 @@ slapStroke.Parent = slapBtn
 local lastSlapTime = 0
 local SLAP_COOLDOWN_CLIENT = 0.5
 
--- Esegue l'animazione di swing della spalla sul personaggio locale (Procedurale 100% compatibile)
+-- Esegue l'animazione di swing nativa sul personaggio tramite un Tool temporaneo (Replicazione automatica e sicura)
 local function playSwingAnimation()
 	local char = player.Character
 	if not char then return end
-	local shoulder = char:FindFirstChild("Right Shoulder", true) or char:FindFirstChild("RightShoulder", true)
-	if shoulder and shoulder:IsA("Motor6D") then
-		local initialC0 = shoulder.C0
-		local RunService = game:GetService("RunService")
-		local startTime = os.clock()
-		local duration = 0.3
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if hum and hum.Health > 0 then
+		local tool = Instance.new("Tool")
+		tool.Name = "Slap"
+		tool.RequiresHandle = false
+		tool.Parent = player.Backpack
 		
-		local connection
-		connection = RunService.PostSimulation:Connect(function()
-			if not shoulder or not shoulder.Parent then
-				connection:Disconnect()
-				return
+		task.spawn(function()
+			hum:EquipTool(tool)
+			tool:Activate()
+			task.wait(0.2)
+			if tool.Parent then
+				hum:UnequipTools()
+				tool:Destroy()
 			end
-			local elapsed = os.clock() - startTime
-			if elapsed >= duration then
-				shoulder.C0 = initialC0
-				connection:Disconnect()
-				return
-			end
-			
-			local progress = elapsed / duration
-			local angle = math.sin(progress * math.pi) * 1.3 -- Swing fino a ~75 gradi
-			shoulder.C0 = initialC0 * CFrame.Angles(angle, 0, 0)
 		end)
 	end
 end
