@@ -89,7 +89,11 @@ raidRemote.OnServerEvent:Connect(function(player: Player, targetPlayer: Player)
 				targetStorage.Value = 0
 				raiderCoins.Value = raiderCoins.Value + stolenAmount
 				
-				-- Trigger Moments API sul client del raider
+				-- Trigger Moments API sul server (aggiorna tabellone centrale) e sul client (apre notifica)
+				local ServerScriptService = game:GetService("ServerScriptService")
+				local MomentsService = require(ServerScriptService:WaitForChild("MomentsService"))
+				MomentsService.promptCapture(player, "SuccessfulRaid", { Amount = stolenAmount })
+				
 				local momentsRemote = ReplicatedStorage:FindFirstChild("PromptMomentCapture")
 				if momentsRemote and momentsRemote:IsA("RemoteEvent") then
 					momentsRemote:FireClient(player, "SuccessfulRaid", stolenAmount)

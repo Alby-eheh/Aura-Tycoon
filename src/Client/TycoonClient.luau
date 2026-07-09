@@ -423,13 +423,76 @@ refreshInventoryUI()
 
 
 -- ==========================================
--- 3. LOGICA DI INPUT PARITÀ MOBILE / CONTROLLER
+-- 3. LOGICA DI SPRINT VELOCE (CTRL E BOTTONE MOBILE)
 -- ==========================================
+local sprintBtn = Instance.new("TextButton")
+sprintBtn.Name = "SprintButton"
+sprintBtn.Size = UDim2.new(0, 60, 0, 60)
+sprintBtn.Position = UDim2.new(0.85, -20, 0.75, -20)
+sprintBtn.BackgroundColor3 = Color3.fromRGB(0, 240, 255)
+sprintBtn.BackgroundTransparency = 0.4
+sprintBtn.Text = "RUN"
+sprintBtn.TextColor3 = Color3.fromRGB(15, 15, 25)
+sprintBtn.Font = Enum.Font.SourceSansBold
+sprintBtn.TextSize = 14
+sprintBtn.Parent = screenGui
+
+local sprintCorner = Instance.new("UICorner")
+sprintCorner.CornerRadius = UDim.new(0.5, 0)
+sprintCorner.Parent = sprintBtn
+
+local sprintStroke = Instance.new("UIStroke")
+sprintStroke.Color = Color3.fromRGB(255, 255, 255)
+sprintStroke.Thickness = 1.5
+sprintStroke.Transparency = 0.5
+sprintStroke.Parent = sprintBtn
+
+local function getHumanoid(): Humanoid?
+	local char = player.Character
+	if not char then return nil end
+	return char:FindFirstChildOfClass("Humanoid")
+end
+
+local function setSprintActive(active: boolean)
+	local humanoid = getHumanoid()
+	if humanoid then
+		if active then
+			humanoid.WalkSpeed = 36
+			sprintBtn.BackgroundColor3 = Color3.fromRGB(255, 196, 0)
+			sprintBtn.BackgroundTransparency = 0.2
+		else
+			humanoid.WalkSpeed = 16
+			sprintBtn.BackgroundColor3 = Color3.fromRGB(0, 240, 255)
+			sprintBtn.BackgroundTransparency = 0.4
+		end
+	end
+end
+
+-- Gestione tastiera (Ctrl)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
-	if input.UserInputType == Enum.UserInputType.Touch or input.KeyCode == Enum.KeyCode.ButtonA then
-		print("[TycoonClient] Input touch o controller registrato.")
+	if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+		setSprintActive(true)
 	end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+	if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+		setSprintActive(false)
+	end
+end)
+
+-- Gestione touch/mouse sul bottone
+sprintBtn.MouseButton1Down:Connect(function()
+	setSprintActive(true)
+end)
+
+sprintBtn.MouseButton1Up:Connect(function()
+	setSprintActive(false)
+end)
+
+sprintBtn.MouseLeave:Connect(function()
+	setSprintActive(false)
 end)
 
 

@@ -151,7 +151,7 @@ local function generatePlot(plotNumber: number)
 		local plotData = activePlots[plotNumber]
 		if plotData and plotData.Owner == player then
 			runWithDebounce(player, function()
-				local TycoonService = require(ServerScriptService.TycoonService)
+				local TycoonService = require(ServerScriptService:WaitForChild("TycoonService"))
 				TycoonService.claimStorage(player)
 				claimSound:Play()
 				
@@ -185,7 +185,7 @@ local function generatePlot(plotNumber: number)
 		local plotData = activePlots[plotNumber]
 		if plotData and plotData.Owner == player then
 			runWithDebounce(player, function()
-				local TycoonService = require(ServerScriptService.TycoonService)
+				local TycoonService = require(ServerScriptService:WaitForChild("TycoonService"))
 				TycoonService.upgradeGenerator(player)
 				claimSound:Play()
 			end)
@@ -201,7 +201,7 @@ local function generatePlot(plotNumber: number)
 		local plotData = activePlots[plotNumber]
 		if plotData and plotData.Owner == player then
 			runWithDebounce(player, function()
-				local TycoonService = require(ServerScriptService.TycoonService)
+				local TycoonService = require(ServerScriptService:WaitForChild("TycoonService"))
 				TycoonService.upgradeDefender(player)
 			end)
 		end
