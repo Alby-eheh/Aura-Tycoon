@@ -122,20 +122,20 @@ local function generatePlot(plotNumber: number)
 	-- Piattaforma del bordo colorata (identificatore del lotto del giocatore)
 	local ring = Instance.new("Part")
 	ring.Name = "PlotOwnerBorder"
-	ring.Size = Vector3.new(12, 0.4, 12)
-	ring.Position = center + Vector3.new(0, 0.3, 0)
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Size = Vector3.new(0.4, 12, 12)
+	ring.CFrame = CFrame.new(center + Vector3.new(0, 0.51, 0)) * CFrame.Angles(0, 0, math.rad(90))
 	ring.Color = color
 	ring.Material = Enum.Material.SmoothPlastic
 	ring.Anchored = true
 	ring.Parent = plotFolder
-	Instance.new("UICorner", ring) -- Rende il bordo un cerchio liscio
 
 	-- 2. Claim Pad (Neon Verde Circolare)
 	local claimPad = Instance.new("Part")
 	claimPad.Name = "ClaimPad"
 	claimPad.Shape = Enum.PartType.Cylinder
 	claimPad.Size = Vector3.new(0.4, 6, 6)
-	claimPad.CFrame = CFrame.new(center + Vector3.new(-18, 0.2, -18)) * CFrame.Angles(math.rad(90), 0, 0)
+	claimPad.CFrame = CFrame.new(center + Vector3.new(-18, 0.55, -18)) * CFrame.Angles(0, 0, math.rad(90))
 	claimPad.Anchored = true
 	claimPad.Color = Color3.fromRGB(0, 255, 100)
 	claimPad.Material = Enum.Material.Neon
@@ -154,7 +154,7 @@ local function generatePlot(plotNumber: number)
 	upgradePad.Name = "UpgradePad"
 	upgradePad.Shape = Enum.PartType.Cylinder
 	upgradePad.Size = Vector3.new(0.4, 6, 6)
-	upgradePad.CFrame = CFrame.new(center + Vector3.new(18, 0.2, -18)) * CFrame.Angles(math.rad(90), 0, 0)
+	upgradePad.CFrame = CFrame.new(center + Vector3.new(18, 0.55, -18)) * CFrame.Angles(0, 0, math.rad(90))
 	upgradePad.Anchored = true
 	upgradePad.Color = Color3.fromRGB(0, 240, 255)
 	upgradePad.Material = Enum.Material.Neon
@@ -166,7 +166,7 @@ local function generatePlot(plotNumber: number)
 	gnomePad.Name = "GnomePad"
 	gnomePad.Shape = Enum.PartType.Cylinder
 	gnomePad.Size = Vector3.new(0.4, 6, 6)
-	gnomePad.CFrame = CFrame.new(center + Vector3.new(0, 0.2, -18)) * CFrame.Angles(math.rad(90), 0, 0)
+	gnomePad.CFrame = CFrame.new(center + Vector3.new(0, 0.55, -18)) * CFrame.Angles(0, 0, math.rad(90))
 	gnomePad.Anchored = true
 	gnomePad.Color = Color3.fromRGB(255, 196, 0)
 	gnomePad.Material = Enum.Material.Neon
@@ -178,7 +178,7 @@ local function generatePlot(plotNumber: number)
 	raidPortal.Name = "RaidPortal"
 	raidPortal.Shape = Enum.PartType.Cylinder
 	raidPortal.Size = Vector3.new(0.4, 8, 8)
-	raidPortal.CFrame = CFrame.new(center + Vector3.new(0, 0.2, 18)) * CFrame.Angles(math.rad(90), 0, 0)
+	raidPortal.CFrame = CFrame.new(center + Vector3.new(0, 0.55, 18)) * CFrame.Angles(0, 0, math.rad(90))
 	raidPortal.Anchored = true
 	raidPortal.Color = Color3.fromRGB(255, 0, 85)
 	raidPortal.Material = Enum.Material.Neon
