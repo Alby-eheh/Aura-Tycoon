@@ -156,6 +156,14 @@ closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.TextSize = 18
 closeBtn.Parent = menuFrame
 
+-- Azioni di apertura e chiusura del menu
+openMenuBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = not menuFrame.Visible
+end)
+closeBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = false
+end)
+
 -- Navigation Tabs
 local tabShopBtn = Instance.new("TextButton")
 tabShopBtn.Size = UDim2.new(0, 180, 0, 35)
