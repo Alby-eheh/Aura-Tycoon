@@ -629,8 +629,19 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 		end
 		
 		local assets = ReplicatedStorage:FindFirstChild("Assets")
+		if not assets then
+			warn("[MapService] ATTENZIONE: La cartella 'Assets' non esiste in ReplicatedStorage! Creala ed inseriscici 'Defenders'.")
+		end
+		
 		local defendersFolder = assets and assets:FindFirstChild("Defenders")
+		if assets and not defendersFolder then
+			warn("[MapService] ATTENZIONE: La cartella 'Defenders' non esiste dentro ReplicatedStorage.Assets!")
+		end
+		
 		local targetTemplate = defendersFolder and defendersFolder:FindFirstChild(defenderName)
+		if defendersFolder and not targetTemplate then
+			warn("[MapService] ATTENZIONE: Non ho trovato alcun modello denominato esattamente '" .. defenderName .. "' in ReplicatedStorage.Assets.Defenders! Controlla maiuscole e spazi.")
+		end
 		
 		local cloneInstance = nil
 		if targetTemplate then
