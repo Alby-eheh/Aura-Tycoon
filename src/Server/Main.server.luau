@@ -4,15 +4,38 @@
 
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Inizializza automaticamente i RemoteEvents necessari se mancanti
+local function ensureRemoteEvent(name: string): RemoteEvent
+	local remote = ReplicatedStorage:FindFirstChild(name)
+	if not remote then
+		local newRemote = Instance.new("RemoteEvent")
+		newRemote.Name = name
+		newRemote.Parent = ReplicatedStorage
+		print("[SERVER BOOTSTRAP] Creato RemoteEvent: " .. name)
+		return newRemote
+	end
+	return remote :: RemoteEvent
+end
+
+ensureRemoteEvent("UpdateStorageRemote")
+ensureRemoteEvent("ExecuteRaidRemote")
+ensureRemoteEvent("GnomeTriggerRemote")
+ensureRemoteEvent("PromptMomentCapture")
+ensureRemoteEvent("UpdateMomentsBillboard")
+ensureRemoteEvent("ShowSystemAlert")
 
 local TycoonService = require(ServerScriptService:WaitForChild("TycoonService"))
 local RaidService = require(ServerScriptService:WaitForChild("RaidService"))
 local ServerRestartService = require(ServerScriptService:WaitForChild("ServerRestartService"))
 local MonetizationService = require(ServerScriptService:WaitForChild("MonetizationService"))
+local MapService = require(ServerScriptService:WaitForChild("MapService"))
 
 -- 1. Inizializzazione Servizi
 MonetizationService.init()
 ServerRestartService.init()
+MapService.init()
 
 -- 2. Hook per PlayerAdded/PlayerRemoving per caricare/scaricare i dati
 Players.PlayerAdded:Connect(function(player)

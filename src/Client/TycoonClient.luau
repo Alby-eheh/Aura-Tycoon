@@ -30,14 +30,35 @@ local GnomeTriggerRemote = ReplicatedStorage:WaitForChild("GnomeTriggerRemote")
 GnomeTriggerRemote.OnClientEvent:Connect(function(attacker)
 	print("[Client] Sei stato sbalzato dallo Gnomo protettivo!")
 	
+	-- Effetto visivo di Camera Shake
+	local camera = game:GetService("Workspace").CurrentCamera
+	if camera then
+		local endTime = os.clock() + 0.5
+		task.spawn(function()
+			while os.clock() < endTime do
+				local shakeOffset = CFrame.new(
+					(math.random() - 0.5) * 0.4,
+					(math.random() - 0.5) * 0.4,
+					(math.random() - 0.5) * 0.4
+				) * CFrame.Angles(
+					(math.random() - 0.5) * 0.04,
+					(math.random() - 0.5) * 0.04,
+					(math.random() - 0.5) * 0.04
+				)
+				camera.CFrame = camera.CFrame * shakeOffset
+				task.wait(0.01)
+			end
+		end)
+	end
+	
 	local character = player.Character
 	if character then
 		local hrp = character:WaitForChild("HumanoidRootPart")
 		if hrp then
 			-- Applica effetto rimbalzo in aria
 			local bodyVelocity = Instance.new("BodyVelocity")
-			bodyVelocity.Velocity = Vector3.new(0, 100, 50)
-			bodyVelocity.MaxForce = Vector3.new(0, 100000, 100000)
+			bodyVelocity.Velocity = Vector3.new(0, 80, -60) -- lo lancia all'indietro
+			bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
 			bodyVelocity.Parent = hrp
 			task.wait(0.4)
 			bodyVelocity:Destroy()
