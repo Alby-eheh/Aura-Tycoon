@@ -821,25 +821,32 @@ slapStroke.Parent = slapBtn
 local lastSlapTime = 0
 local SLAP_COOLDOWN_CLIENT = 0.5
 
--- Esegue l'animazione di swing nativa sul personaggio tramite un Tool temporaneo (Replicazione automatica e sicura)
+-- Esegue l'animazione di swing nativa sul personaggio tramite un Tool temporaneo (Parenting al Character per funzionamento Client)
 local function playSwingAnimation()
 	local char = player.Character
 	if not char then return end
 	local hum = char:FindFirstChildOfClass("Humanoid")
 	if hum and hum.Health > 0 then
+		print("[playSwingAnimation] Generazione Tool temporaneo per lo schiaffo...")
 		local tool = Instance.new("Tool")
 		tool.Name = "Slap"
 		tool.RequiresHandle = false
-		tool.Parent = player.Backpack
+		
+		-- Da client, l'equipaggiamento si esegue impostando direttamente il Parent sul Character
+		tool.Parent = char
 		
 		task.spawn(function()
-			hum:EquipTool(tool)
+			task.wait() -- Attendi un frame per la stabilità del joint
 			tool:Activate()
-			task.wait(0.2)
-			if tool.Parent then
-				hum:UnequipTools()
-				tool:Destroy()
+			task.wait(0.25)
+			if tool.Parent == char then
+				local backpack = player:FindFirstChild("Backpack")
+				if backpack then
+					tool.Parent = backpack
+				end
 			end
+			tool:Destroy()
+			print("[playSwingAnimation] Tool distrutto con successo.")
 		end)
 	end
 end
