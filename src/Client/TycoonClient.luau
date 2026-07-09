@@ -967,7 +967,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 	end
 	
 	-- 2. GESTIONE FOV ZOOM DINAMICO (SENSAZIONE DI VELOCITÀ)
-	if hum and camera then
+	if hum and camera and hrp then
 		local isSprinting = (hum.WalkSpeed > 20) and (hum.MoveDirection.Magnitude > 0)
 		targetFOV = isSprinting and 85 or 70
 		
@@ -979,6 +979,29 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		if isSprinting then
 			local bobbing = math.abs(math.sin(os.clock() * 14)) * 0.18
 			camera.CFrame = camera.CFrame * CFrame.new(0, bobbing, 0)
+			
+			-- 4. PARTICELLE DI CORSA (SPRINT DUST)
+			local dust = hrp:FindFirstChild("SprintDust") :: ParticleEmitter?
+			if not dust then
+				local newDust = Instance.new("ParticleEmitter")
+				newDust.Name = "SprintDust"
+				newDust.Color = ColorSequence.new(Color3.fromRGB(220, 220, 220))
+				newDust.Size = NumberSequence.new(0.4, 1.2)
+				newDust.Lifetime = NumberRange.new(0.2, 0.4)
+				newDust.Rate = 25
+				newDust.Speed = NumberRange.new(2, 6)
+				newDust.SpreadAngle = Vector2.new(40, 40)
+				newDust.Texture = "rbxassetid://242203525"
+				newDust.EmissionDirection = Enum.NormalId.Bottom
+				newDust.Parent = hrp
+			else
+				dust.Enabled = true
+			end
+		else
+			local dust = hrp:FindFirstChild("SprintDust") :: ParticleEmitter?
+			if dust then
+				dust.Enabled = false
+			end
 		end
 	end
 end)

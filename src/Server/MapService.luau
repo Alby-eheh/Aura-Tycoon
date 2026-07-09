@@ -347,6 +347,48 @@ end
 function MapService.init()
 	configureLighting()
 	
+	-- Ciclo Giorno/Notte Dinamico (con colori ambientali e bloom adattivi)
+	task.spawn(function()
+		local Lighting = game:GetService("Lighting")
+		local increment = 0.05 -- Velocità di scorrimento del tempo
+		
+		while true do
+			task.wait(0.6)
+			local newTime = (Lighting.ClockTime + increment) % 24
+			Lighting.ClockTime = newTime
+			
+			local isNight = (newTime < 6) or (newTime > 18)
+			local bloom = Lighting:FindFirstChild("AutoBloom") :: BloomEffect?
+			local cc = Lighting:FindFirstChild("AutoColorCorrection") :: ColorCorrectionEffect?
+			
+			if isNight then
+				Lighting.Ambient = Color3.fromRGB(30, 30, 50)
+				Lighting.OutdoorAmbient = Color3.fromRGB(40, 40, 60)
+				if bloom then
+					bloom.Intensity = 1.9
+					bloom.Threshold = 0.5
+				end
+				if cc then
+					cc.Contrast = 0.2
+					cc.Saturation = 0.3
+					cc.TintColor = Color3.fromRGB(220, 220, 255)
+				end
+			else
+				Lighting.Ambient = Color3.fromRGB(85, 80, 95)
+				Lighting.OutdoorAmbient = Color3.fromRGB(130, 115, 125)
+				if bloom then
+					bloom.Intensity = 1.15
+					bloom.Threshold = 0.75
+				end
+				if cc then
+					cc.Contrast = 0.12
+					cc.Saturation = 0.2
+					cc.TintColor = Color3.fromRGB(255, 248, 240)
+				end
+			end
+		end
+	end)
+	
 	mapFolder = Instance.new("Folder")
 	mapFolder.Name = "HostileTycoonMap"
 	mapFolder.Parent = Workspace

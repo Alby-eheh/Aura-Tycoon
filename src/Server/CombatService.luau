@@ -1,6 +1,6 @@
 --!strict
 -- CombatService.luau
--- Servizio server per la gestione del combattimento PvP, knockback, danni ed economia di sconfitta.
+-- Servizio server per la gestione del combattimento PvP, knockback, danni, scie armi e damage popup fluttuanti.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,6 +13,80 @@ local SLAP_DAMAGE = 20
 local SLAP_RANGE = 10.0
 local SLAP_COOLDOWN = 0.5 -- secondi
 local HIT_SOUND_ID = "rbxassetid://12221946"
+
+-- Spawna un'etichetta 3D fluttuante ed animata sopra la testa per indicare i danni o gli effetti
+local function spawnDamagePopup(character: Model, text: string, color: Color3)
+	local head = character:FindFirstChild("Head")
+	if not head then return end
+	
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "DamagePopup"
+	billboard.Size = UDim2.new(0, 130, 0, 45)
+	-- Sfasamento casuale minimo per evitare sovrapposizioni
+	billboard.StudsOffset = Vector3.new(math.random(-2, 2), 3, math.random(-1, 1))
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = color
+	label.TextSize = 20
+	label.Font = Enum.Font.SourceSansBold
+	label.TextStrokeTransparency = 0
+	label.TextStrokeColor3 = Color3.new(0, 0, 0)
+	label.Parent = billboard
+	
+	-- Anima il popup verso l'alto e dissolvi in dissolvenza
+	task.spawn(function()
+		local duration = 12
+		for i = 1, duration do
+			task.wait(0.04)
+			billboard.StudsOffset = billboard.StudsOffset + Vector3.new(0, 0.22, 0)
+			local transparency = i / duration
+			label.TextTransparency = transparency
+			label.TextStrokeTransparency = transparency
+		end
+		billboard:Destroy()
+	end)
+end
+
+-- Genera una scia luminosa al neon (Trail) che segue la spazzata del braccio
+local function spawnSwingTrail(attackerChar: Model, color: Color3)
+	-- Cerca il braccio destro (R6: Right Arm, R15: RightLowerArm o RightHand)
+	local arm = attackerChar:FindFirstChild("Right Arm") or attackerChar:FindFirstChild("RightLowerArm")
+	if not arm or not arm:IsA("BasePart") then return end
+	
+	local att0 = Instance.new("Attachment")
+	att0.Name = "TrailAtt0"
+	att0.Position = Vector3.new(0, -arm.Size.Y/2, 0)
+	att0.Parent = arm
+	
+	local att1 = Instance.new("Attachment")
+	att1.Name = "TrailAtt1"
+	att1.Position = Vector3.new(0, arm.Size.Y/2, 0)
+	att1.Parent = arm
+	
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = att0
+	trail.Attachment1 = att1
+	trail.Color = ColorSequence.new(color)
+	trail.LightEmission = 1.0
+	trail.LightInfluence = 0
+	trail.Lifetime = 0.22
+	trail.WidthScale = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	trail.Parent = arm
+	
+	task.delay(0.3, function()
+		trail:Destroy()
+		att0:Destroy()
+		att1:Destroy()
+	end)
+end
 
 -- Inizializza gli eventi per PlayerAdded per monitorare la salute
 function CombatService.init()
@@ -31,10 +105,21 @@ function CombatService.init()
 		if now - lastSwing < SLAP_COOLDOWN then return end
 		attacker:SetAttribute("LastSlapSwing", now)
 		
-		-- Notifica visiva dello swing agli altri client (opzionale, gestita localmente)
+		-- 2. Colore della scia (Trail) basato sull'Aura equipaggiata
+		local cosmetic = attacker:GetAttribute("EquippedCosmetic") or ""
+		local trailColor = Color3.fromRGB(255, 255, 255) -- Bianco di default
+		if cosmetic == "Aura Grigia" then
+			trailColor = Color3.fromRGB(150, 150, 150)
+		elseif cosmetic == "Neon Ciano Aura" then
+			trailColor = Color3.fromRGB(0, 240, 255)
+		elseif cosmetic == "★ Golden Aura" then
+			trailColor = Color3.fromRGB(255, 215, 0)
+		end
+		
+		spawnSwingTrail(attackerChar, trailColor)
 		print("[CombatService] " .. attacker.Name .. " sferra uno schiaffo.")
 		
-		-- 2. Ricerca del bersaglio più vicino entro SLAP_RANGE
+		-- 3. Ricerca del bersaglio più vicino entro SLAP_RANGE
 		local targetPlayer: Player? = nil
 		local minDistance = SLAP_RANGE
 		
@@ -53,7 +138,7 @@ function CombatService.init()
 			end
 		end
 		
-		-- 3. Applica il colpo se il bersaglio è valido
+		-- 4. Applica il colpo se il bersaglio è valido
 		if targetPlayer then
 			local targetChar = targetPlayer.Character
 			if not targetChar then return end
@@ -63,6 +148,9 @@ function CombatService.init()
 			
 			-- Applica danno
 			targetHum.Health = math.max(targetHum.Health - SLAP_DAMAGE, 0)
+			
+			-- Spawna popup di danno 3D
+			spawnDamagePopup(targetChar, "-" .. SLAP_DAMAGE .. " HP", Color3.fromRGB(255, 0, 50))
 			
 			-- Riproduci suono di impatto spaziale
 			local hitSound = Instance.new("Sound")
@@ -98,7 +186,7 @@ function CombatService.init()
 			
 			print("[CombatService] " .. attacker.Name .. " colpisce " .. targetPlayer.Name .. "! HP rimanenti: " .. targetHum.Health)
 			
-			-- 4. Gestione della sconfitta del bersaglio (HP == 0)
+			-- 5. Gestione della sconfitta del bersaglio (HP == 0)
 			if targetHum.Health <= 0 then
 				CombatService.handleDefeat(targetPlayer, attacker)
 			end
@@ -109,6 +197,11 @@ end
 -- Gestisce la sconfitta del giocatore, la perdita dei Sheckles e il respawn
 function CombatService.handleDefeat(victim: Player, killer: Player)
 	print("[CombatService] " .. victim.Name .. " è stato atterrato da " .. killer.Name)
+	
+	local victimChar = victim.Character
+	if victimChar then
+		spawnDamagePopup(victimChar, "KO!", Color3.fromRGB(255, 196, 0))
+	end
 	
 	local victimStats = victim:FindFirstChild("leaderstats")
 	local sheckles = victimStats and victimStats:FindFirstChild("Sheckles") :: IntValue
@@ -129,8 +222,8 @@ function CombatService.handleDefeat(victim: Player, killer: Player)
 	end
 	
 	-- Annuncia la sconfitta sul tabellone centrale
+	local ServerScriptService = game:GetService("ServerScriptService")
 	local MomentsService = require(ServerScriptService.MomentsService)
-	local message = victim.Name .. " è stato steso da " .. killer.Name .. "! Persi " .. lossAmount .. " Sheckles! 💥"
 	MomentsService.recordFailedRaid(victim, killer, 0) -- riutilizza la logica per aggiornare il cartellone
 	
 	-- Teletrasporta la vittima al proprio plot di appartenenza e ripristina la salute
@@ -139,11 +232,10 @@ function CombatService.handleDefeat(victim: Player, killer: Player)
 		task.spawn(function()
 			task.wait(2.0) -- Tempo prima del respawn
 			local MapService = require(ServerScriptService.MapService)
-			local center = MapService.PLOT_COORDINATES and MapService.PLOT_COORDINATES[plotId]
 			
-			local victimChar = victim.Character or victim.CharacterAdded:Wait()
-			local victimHrp = victimChar:WaitForChild("HumanoidRootPart") :: Part
-			local victimHum = victimChar:WaitForChild("Humanoid") :: Humanoid
+			local victimCharModel = victim.Character or victim.CharacterAdded:Wait()
+			local victimHrp = victimCharModel:WaitForChild("HumanoidRootPart") :: Part
+			local victimHum = victimCharModel:WaitForChild("Humanoid") :: Humanoid
 			
 			if victimHrp and victimHum then
 				-- Teletrasporto
