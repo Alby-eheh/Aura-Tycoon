@@ -11,18 +11,23 @@ local ServerRestartService = {}
 
 -- Registra l'handler per l'evento nativo Roblox
 function ServerRestartService.init()
-	Workspace.ServerRestartScheduled:Connect(function(restartTime: number)
-		print("[LIVEOPS] Riavvio del server programmato alle: " .. os.date("%X", restartTime))
-		
-		-- 1. Avvisa i client con una notifica UI persistente
-		local notificationRemote = ReplicatedStorage:FindFirstChild("ShowSystemAlert")
-		if notificationRemote and notificationRemote:IsA("RemoteEvent") then
-			notificationRemote:FireAllClients("Riavvio dei server tra poco per patch LiveOps. I dati sono salvati automaticamente.")
-		end
-		
-		-- 2. Attendi finché non mancano 15 secondi
-		local timeToWait = math.max((restartTime - os.time()) - 15, 0)
-		task.wait(timeToWait)
+	local success, event = pcall(function()
+		return Workspace.ServerRestartScheduled
+	end)
+	
+	if success and event then
+		event:Connect(function(restartTime: number)
+			print("[LIVEOPS] Riavvio del server programmato alle: " .. os.date("%X", restartTime))
+			
+			-- 1. Avvisa i client con una notifica UI persistente
+			local notificationRemote = ReplicatedStorage:FindFirstChild("ShowSystemAlert")
+			if notificationRemote and notificationRemote:IsA("RemoteEvent") then
+				notificationRemote:FireAllClients("Riavvio dei server tra poco per patch LiveOps. I dati sono salvati automaticamente.")
+			end
+			
+			-- 2. Attendi finché non mancano 15 secondi
+			local timeToWait = math.max((restartTime - os.time()) - 15, 0)
+			task.wait(timeToWait)
 		
 		-- 3. Salva i dati di tutti i giocatori in modo sincrono
 		print("[LIVEOPS] Inizio salvataggio di sicurezza per tutti i player...")
@@ -54,6 +59,9 @@ function ServerRestartService.init()
 			end)
 		end
 	end)
+	else
+		warn("[ServerRestartService] Info: Evento ServerRestartScheduled non presente in questo ambiente Studio (facoltativo, ignorato).")
+	end
 end
 
 return ServerRestartService
