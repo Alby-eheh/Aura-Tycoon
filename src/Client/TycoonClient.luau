@@ -9,7 +9,10 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
-local claimButton = script.Parent:WaitForChild("ClaimButton")
+local claimButton = PlayerGui:WaitForChild("ClaimButton", 3)
+if not claimButton then
+	print("[TycoonClient] Info: ClaimButton non trovato in PlayerGui (facoltativo, bypassato).")
+end
 
 -- Parità di Input (Mobile, Controller, PC)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)

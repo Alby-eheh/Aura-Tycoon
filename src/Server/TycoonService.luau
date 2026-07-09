@@ -6,20 +6,34 @@ local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local TycoonDataStore = DataStoreService:GetDataStore("TycoonSaveSystem_2026")
-local TycoonService = {}
+local TycoonDataStore = nil
+local successDataStore, err = pcall(function()
+	TycoonDataStore = DataStoreService:GetDataStore("TycoonSaveSystem_2026")
+end)
 
+if not successDataStore or not TycoonDataStore then
+	warn("[TycoonService] DataStore inaccessibile (il gioco potrebbe non essere pubblicato o l'accesso alle API non è abilitato). Verrà usata la memoria locale fittizia.")
+end
+
+local TycoonService = {}
 local plots = {} -- Mappa UserId -> Plot
 local INCOME_TICK_RATE = 1.0 -- Secondi
 
 -- Carica o inizializza i dati del Tycoon del giocatore
 function TycoonService.loadData(player: Player)
 	local userId = player.UserId
-	local success, savedData = pcall(function()
-		return TycoonDataStore:GetAsync(tostring(userId))
-	end)
+	local savedData = nil
 	
-	if success and savedData then
+	if TycoonDataStore then
+		local success, result = pcall(function()
+			return TycoonDataStore:GetAsync(tostring(userId))
+		end)
+		if success then
+			savedData = result
+		end
+	end
+	
+	if savedData then
 		plots[userId] = {
 			Owner = player,
 			GeneratorLevel = savedData.GeneratorLevel or 1,
@@ -27,7 +41,7 @@ function TycoonService.loadData(player: Player)
 			GnomeActiveUntil = savedData.GnomeActiveUntil or 0
 		}
 	else
-		-- Dati default se nuovo utente
+		-- Dati default se nuovo utente o fallimento DataStore
 		plots[userId] = {
 			Owner = player,
 			GeneratorLevel = 1,
@@ -64,7 +78,7 @@ end)
 Players.PlayerRemoving:Connect(function(player)
 	local userId = player.UserId
 	local plot = plots[userId]
-	if plot then
+	if plot and TycoonDataStore then
 		pcall(function()
 			TycoonDataStore:SetAsync(tostring(userId), {
 				GeneratorLevel = plot.GeneratorLevel,
@@ -72,8 +86,8 @@ Players.PlayerRemoving:Connect(function(player)
 				GnomeActiveUntil = plot.GnomeActiveUntil
 			})
 		end)
-		plots[userId] = nil
 	end
+	plots[userId] = nil
 end)
 
 return TycoonService
