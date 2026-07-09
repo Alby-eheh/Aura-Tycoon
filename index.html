@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hostile Tycoon 2026 - Piattaforma di Simulazione e Controllo</title>
+  <!-- Google Fonts: Outfit (Titoli) e Inter (Testo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome per icone moderne -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Overlay Effetto Sfondo Dinamico -->
+  <div class="bg-gradient-overlay"></div>
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <!-- Header dell'Applicazione -->
+  <header class="app-header">
+    <div class="header-logo">
+      <i class="fa-solid fa-gamepad logo-icon"></i>
+      <div class="logo-text">
+        <h1>HOSTILE TYCOON <span>2026</span></h1>
+        <p>Ecosistema Roblox CCU Maximizer & LiveOps Simulator</p>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-bubble" id="header-ccu-bubble">
+        <i class="fa-solid fa-users text-cyan"></i>
+        <div>
+          <span class="bubble-val" id="live-ccu-count">12,500</span>
+          <span class="bubble-lbl">CCU Attivi</span>
+        </div>
+      </div>
+      <div class="stat-bubble" id="header-wallet-bubble">
+        <i class="fa-solid fa-coins text-gold"></i>
+        <div>
+          <span class="bubble-val" id="player-wallet">1,500</span>
+          <span class="bubble-lbl">Sheckles (Moneta)</span>
+        </div>
+      </div>
+      <div class="stat-bubble" id="header-robux-bubble">
+        <i class="fa-solid fa-gem text-purple"></i>
+        <div>
+          <span class="bubble-val" id="player-robux">250</span>
+          <span class="bubble-lbl">Robux Simulati</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigazione Principale -->
+  <nav class="app-nav">
+    <button class="nav-btn active" id="nav-btn-simulator" onclick="switchTab('simulator')">
+      <i class="fa-solid fa-desktop"></i> Simulatore di Gioco
+    </button>
+    <button class="nav-btn" id="nav-btn-analytics" onclick="switchTab('analytics')">
+      <i class="fa-solid fa-chart-line"></i> Dashboard Telemetria
+    </button>
+    <button class="nav-btn" id="nav-btn-exporter" onclick="switchTab('exporter')">
+      <i class="fa-solid fa-code"></i> Codici Luau (Argon)
+    </button>
+  </nav>
+
+  <!-- Contenitore Principale delle Tab -->
+  <main class="app-container">
+
+    <!-- Tab 1: SIMULATORE DI GIOCO -->
+    <section class="tab-content active" id="tab-simulator">
+      <div class="simulator-layout">
+        
+        <!-- Sinistra: Griglia dei Tycoon -->
+        <div class="sim-left-panel">
+          <div class="panel-header">
+            <h2><i class="fa-solid fa-cubes"></i> Griglia dei Tycoon del Server</h2>
+            <span class="badge badge-success">Live Syncing (Argon)</span>
+          </div>
+          
+          <div class="tycoon-grid">
+            <!-- Plot 1: Giocatore -->
+            <div class="tycoon-plot player-plot" id="plot-player">
+              <div class="plot-header">
+                <span class="plot-name"><i class="fa-solid fa-user"></i> Tuo Lotto (Plot #1)</span>
+                <span class="plot-status text-cyan" id="plot-player-status">Attivo</span>
+              </div>
+              <div class="plot-body">
+                <div class="generators-container">
+                  <h4>Generatori:</h4>
+                  <div class="generator-item">
+                    <span class="gen-name"><i class="fa-solid fa-microchip text-cyan"></i> Voxel Brainrot Gen</span>
+                    <span class="gen-level" id="gen-lvl-1">Lvl 1</span>
+                    <span class="gen-income">+10/s</span>
+                  </div>
+                  <div class="generator-item" id="gen-2-row" style="opacity: 0.5;">
+                    <span class="gen-name"><i class="fa-solid fa-music text-purple"></i> Tralalero Audio Node</span>
+                    <span class="gen-level" id="gen-lvl-2">Bloccato</span>
+                    <span class="gen-income">+0/s</span>
+                  </div>
+                </div>
+                <div class="defenses-container">
+                  <h4>Difese Attive:</h4>
+                  <div class="defense-status" id="player-gnome-status">
+                    <span class="text-muted">Nessuna difesa attiva</span>
+                  </div>
+                </div>
+                <div class="plot-actions">
+                  <div class="storage-info">
+                    <span class="storage-label">Sheckles in Cassa:</span>
+                    <span class="storage-value text-gold" id="player-storage">0</span>
+                  </div>
+                  <button class="btn btn-primary btn-sm" id="btn-claim-player" onclick="claimPlayerStorage()">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Incassa
+                  </button>
+                </div>
+              </div>
+              <div class="plot-controls">
+                <button class="btn btn-outline btn-sm" id="btn-upgrade-gen" onclick="upgradeGenerator()">
+                  <i class="fa-solid fa-arrow-up"></i> Potenzia Gen (50 Sheckles)
+                </button>
+                <button class="btn btn-gold btn-sm" id="btn-buy-gnome" onclick="buyGnome()">
+                  <i class="fa-solid fa-shield-halved"></i> Piazza Gnomo (95 Robux)
+                </button>
+              </div>
+            </div>
+
+            <!-- Plot 2: Rival 1 -->
+            <div class="tycoon-plot rival-plot" id="plot-rival1">
+              <div class="plot-header">
+                <span class="plot-name"><i class="fa-solid fa-robot"></i> Rival_X1</span>
+                <span class="plot-status text-gold" id="plot-rival1-status">AFK</span>
+              </div>
+              <div class="plot-body">
+                <div class="generators-container">
+                  <div class="generator-item">
+                    <span><i class="fa-solid fa-microchip"></i> Voxel Gen Lvl 2</span>
+                    <span class="text-gold">+25/s</span>
+                  </div>
+                </div>
+                <div class="defenses-container">
+                  <h4>Difese Attive:</h4>
+                  <div class="defense-status" id="rival1-gnome-status">
+                    <span class="badge badge-success"><i class="fa-solid fa-shield-halved"></i> Gnomo Attivo</span>
+                  </div>
+                </div>
+                <div class="plot-actions">
+                  <div class="storage-info">
+                    <span class="storage-label">Cassa Razziabile:</span>
+                    <span class="storage-value text-gold" id="rival1-storage">150</span>
+                  </div>
+                  <button class="btn btn-danger btn-sm" id="btn-raid-rival1" onclick="executeRaid('rival1')">
+                    <i class="fa-solid fa-person-rifle"></i> Razzia Plot
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plot 3: Rival 2 -->
+            <div class="tycoon-plot rival-plot" id="plot-rival2">
+              <div class="plot-header">
+                <span class="plot-name"><i class="fa-solid fa-robot"></i> BombardinoPro</span>
+                <span class="plot-status text-purple" id="plot-rival2-status">Attivo</span>
+              </div>
+              <div class="plot-body">
+                <div class="generators-container">
+                  <div class="generator-item">
+                    <span><i class="fa-solid fa-microchip"></i> Voxel Gen Lvl 1</span>
+                    <span class="text-gold">+10/s</span>
+                  </div>
+                </div>
+                <div class="defenses-container">
+                  <h4>Difese Attive:</h4>
+                  <div class="defense-status" id="rival2-gnome-status">
+                    <span class="text-muted">Nessuna difesa</span>
+                  </div>
+                </div>
+                <div class="plot-actions">
+                  <div class="storage-info">
+                    <span class="storage-label">Cassa Razziabile:</span>
+                    <span class="storage-value text-gold" id="rival2-storage">240</span>
+                  </div>
+                  <button class="btn btn-danger btn-sm" id="btn-raid-rival2" onclick="executeRaid('rival2')">
+                    <i class="fa-solid fa-person-rifle"></i> Razzia Plot
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plot 4: Rival 3 -->
+            <div class="tycoon-plot rival-plot" id="plot-rival3">
+              <div class="plot-header">
+                <span class="plot-name"><i class="fa-solid fa-robot"></i> TralaleroFan</span>
+                <span class="plot-status text-cyan" id="plot-rival3-status">Attivo</span>
+              </div>
+              <div class="plot-body">
+                <div class="generators-container">
+                  <div class="generator-item">
+                    <span><i class="fa-solid fa-microchip"></i> Voxel Gen Lvl 3</span>
+                    <span class="text-gold">+50/s</span>
+                  </div>
+                </div>
+                <div class="defenses-container">
+                  <h4>Difese Attive:</h4>
+                  <div class="defense-status" id="rival3-gnome-status">
+                    <span class="badge badge-success"><i class="fa-solid fa-shield-halved"></i> Gnomo Attivo</span>
+                  </div>
+                </div>
+                <div class="plot-actions">
+                  <div class="storage-info">
+                    <span class="storage-label">Cassa Razziabile:</span>
+                    <span class="storage-value text-gold" id="rival3-storage">80</span>
+                  </div>
+                  <button class="btn btn-danger btn-sm" id="btn-raid-rival3" onclick="executeRaid('rival3')">
+                    <i class="fa-solid fa-person-rifle"></i> Razzia Plot
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Destra: Roblox Moments, Gacha & Social Feed -->
+        <div class="sim-right-panel">
+          
+          <!-- Sezione Roblox Moments Billboard -->
+          <div class="panel-section glass-card">
+            <div class="section-header">
+              <h3><i class="fa-solid fa-clapperboard text-cyan"></i> Roblox Moments Billboard</h3>
+              <span class="badge badge-cyan">Moments API v2</span>
+            </div>
+            <div class="moments-list" id="moments-billboard-list">
+              <!-- Moments generati dinamicamente -->
+              <div class="moment-card">
+                <div class="moment-meta">
+                  <span class="moment-author"><i class="fa-solid fa-user-ninja"></i> player123</span>
+                  <span class="moment-likes"><i class="fa-solid fa-heart text-red"></i> 142</span>
+                </div>
+                <p class="moment-desc">Gnomo ha spedito in orbita un raider! 😂 #GnomeDefense #StealABrainrot</p>
+                <div class="moment-action-row">
+                  <button class="btn btn-outline btn-xs" onclick="simulateJoinServer('player123')"><i class="fa-solid fa-right-to-bracket"></i> Unisciti al Server</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sezione Gacha & Cosmetics Unboxing -->
+          <div class="panel-section glass-card">
+            <div class="section-header">
+              <h3><i class="fa-solid fa-box-open text-purple"></i> Ethical Gacha & Trading</h3>
+              <span class="badge badge-purple">Cosmetici Estetici (No P2W)</span>
+            </div>
+            <div class="gacha-controls">
+              <div class="odds-list">
+                <span class="odd-item"><span class="rarity-common">Comune (60%)</span></span>
+                <span class="odd-item"><span class="rarity-rare">Raro (30%)</span></span>
+                <span class="odd-item"><span class="rarity-legendary">Leggendario (10%)</span></span>
+              </div>
+              <div class="gacha-buttons">
+                <button class="btn btn-purple" id="btn-open-gacha" onclick="openGachaBox()">
+                  <i class="fa-solid fa-gift"></i> Apri Cassa (20 Sheckles)
+                </button>
+              </div>
+              <div class="gacha-result" id="gacha-result-display">
+                Nessun cosmetico aperto in questa sessione.
+              </div>
+            </div>
+            <div class="inventory-section">
+              <h4>I tuoi Cosmetici:</h4>
+              <div class="inventory-list" id="player-inventory-list">
+                <span class="inventory-empty text-muted">Inventario vuoto</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Tab 2: DASHBOARD DI TELEMETRIA -->
+    <section class="tab-content" id="tab-analytics">
+      <div class="analytics-layout">
+        
+        <!-- Riga Superiore: Controlli degli Eventi -->
+        <div class="analytics-row-header glass-card">
+          <div class="row-header-title">
+            <h2><i class="fa-solid fa-tower-broadcast text-cyan"></i> LiveOps & Eventi Algoritmici</h2>
+            <p>Sperimenta come gli eventi live e i restart influiscono sulla telemetria e sull'algoritmo di Roblox.</p>
+          </div>
+          <div class="analytics-actions">
+            <button class="btn btn-danger" onclick="triggerBrainrotEvent()">
+              <i class="fa-solid fa-bolt"></i> Evento "Brainrot" (+CCU / Meme Viralità)
+            </button>
+            <button class="btn btn-warning" onclick="triggerServerRestart()">
+              <i class="fa-solid fa-rotate"></i> Schedula Server Restart (Patch LiveOps)
+            </button>
+          </div>
+        </div>
+
+        <!-- Griglia delle Metric Card -->
+        <div class="metrics-grid">
+          <div class="metric-card-telemetry glass-card">
+            <span class="telemetry-lbl">Qualified Bounce Rate (0-60s)</span>
+            <div class="gauge-container">
+              <div class="gauge-bar" id="bounce-rate-gauge" style="width: 12%;">12%</div>
+            </div>
+            <p class="telemetry-desc text-success"><i class="fa-solid fa-circle-check"></i> Ottimizzato! Sotto la soglia critica del 30%.</p>
+          </div>
+
+          <div class="metric-card-telemetry glass-card">
+            <span class="telemetry-lbl">Creator Rewards (Oggi)</span>
+            <div class="creator-rewards-val">
+              <span id="rewards-accumulated">1,240</span> <i class="fa-solid fa-gem text-purple"></i>
+            </div>
+            <p class="telemetry-desc"><i class="fa-solid fa-info-circle text-purple"></i> Calcolato come 5 Robux per spender attivo (>10 min).</p>
+          </div>
+
+          <div class="metric-card-telemetry glass-card">
+            <span class="telemetry-lbl">Ritenzione a 28 Giorni (Algoritmo)</span>
+            <div class="retention-rates">
+              <div class="rate-item"><span>Giorno 1</span><strong id="ret-d1">62%</strong></div>
+              <div class="rate-item"><span>Giorno 7</span><strong id="ret-d7">38%</strong></div>
+              <div class="rate-item"><span>Giorno 28</span><strong id="ret-d28">18%</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grafico CCU in Tempo Reale -->
+        <div class="chart-section glass-card">
+          <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-area text-cyan"></i> Grafico CCU in Tempo Reale (Simulato)</h3>
+            <span class="chart-status-badge" id="chart-status-text">Stato: Regolare</span>
+          </div>
+          <div class="canvas-container">
+            <canvas id="ccuLiveChart" width="800" height="250"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Tab 3: CODICI LUAU EXPORTER -->
+    <section class="tab-content" id="tab-exporter">
+      <div class="exporter-layout">
+        
+        <!-- Navigazione dei file Luau -->
+        <div class="exporter-sidebar glass-card">
+          <h4>File di Progetto Argon</h4>
+          <ul class="file-list">
+            <li class="file-item active" onclick="showLuauCode('TycoonService')">
+              <i class="fa-solid fa-server text-purple"></i> TycoonService.luau
+            </li>
+            <li class="file-item" onclick="showLuauCode('RaidService')">
+              <i class="fa-solid fa-shield text-cyan"></i> RaidService.luau
+            </li>
+            <li class="file-item" onclick="showLuauCode('MomentsService')">
+              <i class="fa-solid fa-photo-film text-gold"></i> MomentsService.luau
+            </li>
+            <li class="file-item" onclick="showLuauCode('ServerRestartService')">
+              <i class="fa-solid fa-rotate-right text-red"></i> ServerRestartService.luau
+            </li>
+            <li class="file-item" onclick="showLuauCode('MonetizationService')">
+              <i class="fa-solid fa-coins text-gold"></i> MonetizationService.luau
+            </li>
+            <li class="file-item" onclick="showLuauCode('TradingModule')">
+              <i class="fa-solid fa-handshake text-purple"></i> TradingModule.luau
+            </li>
+            <li class="file-item" onclick="showLuauCode('TycoonClient')">
+              <i class="fa-solid fa-mobile-screen-button text-cyan"></i> TycoonClient.luau
+            </li>
+          </ul>
+        </div>
+
+        <!-- Visualizzatore di Codice -->
+        <div class="code-viewer-panel glass-card">
+          <div class="code-viewer-header">
+            <span class="active-file-title" id="displayed-file-name">src/Server/TycoonService.luau</span>
+            <button class="btn btn-outline btn-xs" onclick="copyActiveCode()"><i class="fa-solid fa-copy"></i> Copia Codice</button>
+          </div>
+          <div class="code-editor-wrapper">
+            <pre><code id="code-display-area">-- Caricamento codice...</code></pre>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal di Notifica Roblox Moments (Condivisione API) -->
+  <div class="moments-modal-overlay" id="moments-modal">
+    <div class="moments-modal glass-card">
+      <div class="modal-header">
+        <i class="fa-solid fa-clapperboard text-cyan modal-logo-icon"></i>
+        <h3>ROBLOX MOMENTS API</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-clip-preview">
+          <div class="play-icon-overlay"><i class="fa-solid fa-play"></i></div>
+          <div class="clip-text-overlay">RAPINA EPICA DA +<span id="modal-stolen-coins">0</span> COINS!</div>
+        </div>
+        <p class="modal-prompt-text">È stata rilevata un'azione ad alta intensità! Vuoi registrare ed inviare questa clip a <strong>Roblox Moments</strong>?</p>
+        <div class="modal-input-group">
+          <label for="moment-caption-input">Didascalia del Moment:</label>
+          <input type="text" id="moment-caption-input" value="Ho appena rapinato la base di un rivale! 😎💸 #HostileTycoon">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeMomentsModal(false)">Annulla</button>
+        <button class="btn btn-cyan" onclick="closeMomentsModal(true)"><i class="fa-solid fa-paper-plane"></i> Pubblica Moment</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <p>Hostile Tycoon 2026 - Realizzato per parità mobile, ottimizzazione CCU e tracciamento ritenzione a 28 giorni.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "HostileTycoon2026",
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace"
+    },
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/Shared"
+      }
+    },
+    "ServerScriptService": {
+      "$path": "src/Server"
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/Client"
+      }
+    }
+  }
+}
