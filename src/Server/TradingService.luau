@@ -129,6 +129,8 @@ function TradingService.init()
 					-- Rimuovi effetti dal personaggio
 					local char = player.Character
 					if char then
+						local highlight = char:FindFirstChild("CosmeticHighlight")
+						if highlight then highlight:Destroy() end
 						local hrp = char:FindFirstChild("HumanoidRootPart")
 						if hrp then
 							for _, child in ipairs(hrp:GetChildren()) do
@@ -143,6 +145,8 @@ function TradingService.init()
 					partner:SetAttribute("EquippedCosmetic", "")
 					local char = partner.Character
 					if char then
+						local highlight = char:FindFirstChild("CosmeticHighlight")
+						if highlight then highlight:Destroy() end
 						local hrp = char:FindFirstChild("HumanoidRootPart")
 						if hrp then
 							for _, child in ipairs(hrp:GetChildren()) do

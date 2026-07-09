@@ -34,6 +34,10 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 			child:Destroy()
 		end
 	end
+	local oldHighlight = character:FindFirstChild("CosmeticHighlight")
+	if oldHighlight then
+		oldHighlight:Destroy()
+	end
 	local head = character:WaitForChild("Head", 5) :: Part
 	if head then
 		for _, child in ipairs(head:GetChildren()) do
@@ -45,12 +49,36 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 
 	-- 2. Applica la nuova aurora/tag
 	local assetName = nil
+	local auraColor = nil
+	local fillTrans = 0.8
+	local outlineTrans = 0.2
+	
 	if cosmeticName == "Aura Grigia" then
 		assetName = "AuraGrigia"
+		auraColor = Color3.fromRGB(150, 150, 150)
+		fillTrans = 0.85
+		outlineTrans = 0.3
 	elseif cosmeticName == "Neon Ciano Aura" then
 		assetName = "NeonCianoAura"
+		auraColor = Color3.fromRGB(0, 240, 255)
+		fillTrans = 0.75
+		outlineTrans = 0.1
 	elseif cosmeticName == "★ Golden Aura" then
 		assetName = "GoldenAura"
+		auraColor = Color3.fromRGB(255, 215, 0)
+		fillTrans = 0.65
+		outlineTrans = 0.05
+	end
+	
+	if auraColor then
+		-- Spawna Highlight luminescente per un feedback visivo premium
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "CosmeticHighlight"
+		highlight.OutlineColor = auraColor
+		highlight.FillColor = auraColor
+		highlight.FillTransparency = fillTrans
+		highlight.OutlineTransparency = outlineTrans
+		highlight.Parent = character
 	end
 	
 	if assetName then
