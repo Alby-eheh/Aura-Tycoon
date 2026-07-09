@@ -344,7 +344,7 @@ local function configureLighting()
 	-- Impostazioni generali Lighting per look pastello stilizzato (Stile Grow a Garden)
 	pcall(function()
 		-- La tecnologia a volte è protetta in scrittura o richiede Studio restart, ma proviamo ad assegnarla
-		(Lighting as any).Technology = Enum.Technology.ShadowMap
+		(Lighting :: any).Technology = Enum.Technology.ShadowMap
 	end)
 	Lighting.ClockTime = 14.5 -- Sole pomeridiano dorato alto ma angolato
 	Lighting.Brightness = 3.0
