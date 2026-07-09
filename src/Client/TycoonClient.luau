@@ -374,14 +374,14 @@ gachaBtn.MouseButton1Click:Connect(function()
 		                         result.Rarity == "rare" and Color3.fromRGB(0, 240, 255) or Color3.fromRGB(200, 200, 200)
 		resultLabel.TextTransparency = 1
 		resultLabel.TextSize = 22
-		TweenService:Create(resultLabel, TweenInfo.new(0.4, Enum.EasingStyle.BackOut), {TextTransparency = 0, TextSize = 14}):Play()
+		TweenService:Create(resultLabel, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextTransparency = 0, TextSize = 14}):Play()
 		player:SetAttribute("Inventory", result.Inventory)
 		refreshInventoryUI()
 	else
 		resultLabel.Text = result and result.Error or "Errore di connessione"
 		resultLabel.TextColor3 = Color3.fromRGB(255, 0, 85)
 		resultLabel.TextTransparency = 1
-		TweenService:Create(resultLabel, TweenInfo.new(0.3, Enum.EasingStyle.QuadOut), {TextTransparency = 0}):Play()
+		TweenService:Create(resultLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 	end
 end)
 
