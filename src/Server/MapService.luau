@@ -607,9 +607,9 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 	end
 	
 	if active and tier > 0 then
-		local defenderName = "Incel"
-		local labelText = "INCEL DEFENDER"
-		local labelColor = Color3.fromRGB(139, 69, 19)
+		local defenderName = "DiscordMod"
+		local labelText = "DISCORD MOD"
+		local labelColor = Color3.fromRGB(88, 101, 242) -- Blu ufficiale Discord!
 		
 		if tier == 2 then
 			defenderName = "Goat"
@@ -667,7 +667,7 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 		plotData.GnomePart = cloneInstance
 		
 		local labelPart = cloneInstance:IsA("Model") and (cloneInstance.PrimaryPart or cloneInstance:FindFirstChildWhichIsA("BasePart")) or cloneInstance
-		if labelPart and labelPart:IsA("Part") then
+		if labelPart and labelPart:IsA("BasePart") then
 			createFloatingLabel(labelPart, labelText, labelColor)
 		end
 	end
