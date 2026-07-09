@@ -118,6 +118,7 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 				emitter.Lifetime = NumberRange.new(1.5, 2)
 				emitter.Rate = 15
 				emitter.Speed = NumberRange.new(2, 4)
+				emitter.Texture = "rbxassetid://1084969986" -- Scia di vento stilizzata
 				emitter.Parent = hrp
 			elseif cosmeticName == "Neon Ciano Aura" then
 				local emitter = Instance.new("ParticleEmitter")
@@ -131,6 +132,7 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 				emitter.Lifetime = NumberRange.new(1, 1.5)
 				emitter.Rate = 25
 				emitter.Speed = NumberRange.new(1, 3)
+				emitter.Texture = "rbxassetid://6051722880" -- Anello energetico splendente
 				emitter.Parent = hrp
 			elseif cosmeticName == "★ Golden Aura" then
 				local emitter = Instance.new("ParticleEmitter")
@@ -145,6 +147,7 @@ local function applyVisualCosmetic(player: Player, cosmeticName: string)
 				emitter.Rate = 35
 				emitter.Speed = NumberRange.new(1, 4)
 				emitter.SpreadAngle = Vector2.new(10, 10)
+				emitter.Texture = "rbxassetid://258129519" -- Stelle/Scintille dorate HD
 				emitter.Parent = hrp
 			end
 		end

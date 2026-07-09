@@ -280,8 +280,64 @@ local function releasePlot(player: Player)
 	end
 end
 
+-- Automazione completa dell'illuminazione e degli effetti post-processing per un look premium
+local function configureLighting()
+	local Lighting = game:GetService("Lighting")
+	
+	-- Pulisci eventuali vecchi effetti
+	for _, child in ipairs(Lighting:GetChildren()) do
+		if child:IsA("BloomEffect") or child:IsA("ColorCorrectionEffect") or child:IsA("Atmosphere") or child:IsA("SunRaysEffect") then
+			child:Destroy()
+		end
+	end
+	
+	-- Impostazioni generali Lighting per look tramonto caldo tridimensionale
+	Lighting.ClockTime = 16.8 -- Tardo pomeriggio / Tramonto dorato
+	Lighting.Brightness = 3.0
+	Lighting.Ambient = Color3.fromRGB(85, 80, 95)
+	Lighting.OutdoorAmbient = Color3.fromRGB(130, 115, 125)
+	
+	-- 1. Bloom Effect (Bagliore neon ed auree)
+	local bloom = Instance.new("BloomEffect")
+	bloom.Name = "AutoBloom"
+	bloom.Size = 24
+	bloom.Intensity = 1.15
+	bloom.Threshold = 0.75
+	bloom.Parent = Lighting
+	
+	-- 2. Color Correction (Colori caldi e vivaci)
+	local cc = Instance.new("ColorCorrectionEffect")
+	cc.Name = "AutoColorCorrection"
+	cc.Contrast = 0.12
+	cc.Saturation = 0.2
+	cc.TintColor = Color3.fromRGB(255, 248, 240) -- Calore solare
+	cc.Parent = Lighting
+	
+	-- 3. Atmosphere (Nebbia di profondità stilizzata)
+	local atmosphere = Instance.new("Atmosphere")
+	atmosphere.Name = "AutoAtmosphere"
+	atmosphere.Density = 0.12
+	atmosphere.Offset = 0.25
+	atmosphere.Color = Color3.fromRGB(180, 195, 210)
+	atmosphere.Decay = Color3.fromRGB(150, 100, 120) -- Orizzonte rosato tramonto
+	atmosphere.Glare = 0.25
+	atmosphere.Haze = 1.0
+	atmosphere.Parent = Lighting
+	
+	-- 4. SunRays (Raggi solari volumetrici)
+	local sunRays = Instance.new("SunRaysEffect")
+	sunRays.Name = "AutoSunRays"
+	sunRays.Intensity = 0.15
+	sunRays.Spread = 0.7
+	sunRays.Parent = Lighting
+	
+	print("[MapService] Illuminazione e Post-Processing configurati automaticamente!")
+end
+
 -- Inizializza lotti, Moments Billboard e Classifica Ricchi 3D
 function MapService.init()
+	configureLighting()
+	
 	mapFolder = Instance.new("Folder")
 	mapFolder.Name = "HostileTycoonMap"
 	mapFolder.Parent = Workspace
