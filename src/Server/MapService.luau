@@ -486,4 +486,6 @@ function MapService.playGnomeDefenseEffect(player: Player)
 	attachment:Destroy()
 end
 
+MapService.PLOT_COORDINATES = PLOT_COORDINATES
+
 return MapService

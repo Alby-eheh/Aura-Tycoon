@@ -586,4 +586,88 @@ promptMomentRemote.OnClientEvent:Connect(function(actionType, score)
 	popup:Destroy()
 end)
 
+-- ==========================================
+-- 5. LOGICA DI COMBATTIMENTO PVP (SCHIAFFO LOCAL FX & REMOTE)
+-- ==========================================
+local slapBtn = Instance.new("TextButton")
+slapBtn.Name = "SlapButton"
+slapBtn.Size = UDim2.new(0, 60, 0, 60)
+slapBtn.Position = UDim2.new(0.85, -20, 0.75, -90) -- Sopra il tasto Sprint RUN
+slapBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 85)
+slapBtn.BackgroundTransparency = 0.4
+slapBtn.Text = "SLAP"
+slapBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+slapBtn.Font = Enum.Font.SourceSansBold
+slapBtn.TextSize = 14
+slapBtn.Parent = screenGui
+
+local slapCorner = Instance.new("UICorner")
+slapCorner.CornerRadius = UDim.new(0.5, 0)
+slapCorner.Parent = slapBtn
+
+local slapStroke = Instance.new("UIStroke")
+slapStroke.Color = Color3.fromRGB(255, 255, 255)
+slapStroke.Thickness = 1.5
+slapStroke.Transparency = 0.5
+slapStroke.Parent = slapBtn
+
+local lastSlapTime = 0
+local SLAP_COOLDOWN_CLIENT = 0.5
+
+-- Esegue l'animazione di swing della spalla sul personaggio locale
+local function playSwingAnimation()
+	local char = player.Character
+	if not char then return end
+	local shoulder = char:FindFirstChild("Right Shoulder", true) or char:FindFirstChild("RightShoulder", true)
+	if shoulder and shoulder:IsA("Motor6D") then
+		local initialC0 = shoulder.C0
+		task.spawn(function()
+			-- Swing avanti
+			for i = 1, 5 do
+				shoulder.C0 = shoulder.C0 * CFrame.Angles(0.25, 0, 0)
+				task.wait(0.02)
+			end
+			-- Ritorno indietro
+			for i = 1, 5 do
+				shoulder.C0 = shoulder.C0 * CFrame.Angles(-0.25, 0, 0)
+				task.wait(0.02)
+			end
+			shoulder.C0 = initialC0
+		end)
+	end
+end
+
+local function triggerSlapAttack()
+	local nowTime = os.clock()
+	if nowTime - lastSlapTime < SLAP_COOLDOWN_CLIENT then return end
+	lastSlapTime = nowTime
+	
+	-- Animazione visiva locale
+	playSwingAnimation()
+	
+	-- Esegue il RemoteEvent al server
+	local slapSwingRemote = ReplicatedStorage:FindFirstChild("SlapSwingRemote") :: RemoteEvent
+	if slapSwingRemote then
+		slapSwingRemote:FireServer()
+	end
+	
+	-- Piccolo feedback visivo sul bottone
+	slapBtn.BackgroundTransparency = 0.15
+	task.spawn(function()
+		task.wait(0.15)
+		slapBtn.BackgroundTransparency = 0.4
+	end)
+end
+
+-- Input da tastiera (Tasto sinistro Mouse)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		triggerSlapAttack()
+	end
+end)
+
+-- Click/Touch sul bottone a schermo
+slapBtn.MouseButton1Click:Connect(triggerSlapAttack)
+
 return {}
