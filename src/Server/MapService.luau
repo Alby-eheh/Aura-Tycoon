@@ -596,7 +596,10 @@ end
 -- Spawna o rimuove graficamente la statuetta del Difensore Aura nel lotto del giocatore
 function MapService.setDefenderVisual(player: Player, tier: number, active: boolean)
 	local plotId = player:GetAttribute("PlotId")
-	if not plotId then return end
+	if not plotId then
+		warn("[MapService] Impossibile impostare il difensore: PlotId di " .. player.Name .. " è nil! (Il server va riavviato?)")
+		return
+	end
 	
 	local plotData = activePlots[plotId]
 	if not plotData then return end
