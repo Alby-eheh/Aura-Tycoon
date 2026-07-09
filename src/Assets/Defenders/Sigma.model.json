@@ -1,0 +1,23 @@
+{
+  "ClassName": "Part",
+  "Properties": {
+    "Name": "Sigma",
+    "Size": [2, 3, 2],
+    "Color": [192, 192, 192],
+    "Anchored": true,
+    "Material": "Metal",
+    "CanCollide": true
+  },
+  "Children": [
+    {
+      "ClassName": "Part",
+      "Properties": {
+        "Name": "SigmaHat",
+        "Size": [1.6, 1.2, 1.6],
+        "Color": [20, 20, 20],
+        "Anchored": true,
+        "Material": "SmoothPlastic"
+      }
+    }
+  ]
+}

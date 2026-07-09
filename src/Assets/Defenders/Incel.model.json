@@ -1,0 +1,23 @@
+{
+  "ClassName": "Part",
+  "Properties": {
+    "Name": "Incel",
+    "Size": [2, 3, 2],
+    "Color": [139, 69, 19],
+    "Anchored": true,
+    "Material": "Wood",
+    "CanCollide": true
+  },
+  "Children": [
+    {
+      "ClassName": "Part",
+      "Properties": {
+        "Name": "IncelHat",
+        "Size": [2, 0.5, 2],
+        "Color": [80, 80, 80],
+        "Anchored": true,
+        "Material": "Plastic"
+      }
+    }
+  ]
+}

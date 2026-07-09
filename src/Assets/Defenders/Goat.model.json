@@ -1,0 +1,23 @@
+{
+  "ClassName": "Part",
+  "Properties": {
+    "Name": "Goat",
+    "Size": [2, 3, 2],
+    "Color": [245, 245, 245],
+    "Anchored": true,
+    "Material": "Marble",
+    "CanCollide": true
+  },
+  "Children": [
+    {
+      "ClassName": "Part",
+      "Properties": {
+        "Name": "GoatHorns",
+        "Size": [2.5, 0.4, 0.4],
+        "Color": [50, 50, 50],
+        "Anchored": true,
+        "Material": "Slate"
+      }
+    }
+  ]
+}

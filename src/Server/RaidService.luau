@@ -34,8 +34,9 @@ raidRemote.OnServerEvent:Connect(function(player: Player, targetPlayer: Player)
 	local now = os.time()
 	
 	if now < targetGnomeActive then
-		-- GNOMO ATTIVO: Respinge il raider
-		print("[RaidService] Gnome protettivo scattato per " .. targetPlayer.Name)
+		-- GNOMO / DIFENSORE ATTIVO: Respinge il raider
+		local targetDefenderTier = targetPlayer:GetAttribute("DefenderTier") or 1
+		print("[RaidService] Difensore Aura Lvl " .. targetDefenderTier .. " scattato per " .. targetPlayer.Name)
 		
 		-- Attiva effetti audio e particelle nel Workspace (richiamo locale per evitare dipendenza circolare)
 		local ServerScriptService = game:GetService("ServerScriptService")
@@ -45,23 +46,32 @@ raidRemote.OnServerEvent:Connect(function(player: Player, targetPlayer: Player)
 		-- Penalizzazione del raider e lancio fisico sul client
 		player:SetAttribute("Stunned", true)
 		
-		-- Sottrae Sheckles al raider e li dona al difensore
+		-- Sottrae Sheckles al raider e li dona al difensore (in base al tier)
 		local raiderStats = player:FindFirstChild("leaderstats")
 		local targetStats = targetPlayer:FindFirstChild("leaderstats")
 		if raiderStats and targetStats then
 			local raiderCoins = raiderStats:FindFirstChild("Sheckles")
 			local targetCoins = targetStats:FindFirstChild("Sheckles")
 			if raiderCoins and targetCoins then
-				local penalty = math.min(raiderCoins.Value, 500)
+				local penaltyAmount = 50
+				if targetDefenderTier == 2 then
+					penaltyAmount = 150
+				elseif targetDefenderTier == 3 then
+					penaltyAmount = 300
+				elseif targetDefenderTier == 4 then
+					penaltyAmount = 600
+				end
+				
+				local penalty = math.min(raiderCoins.Value, penaltyAmount)
 				raiderCoins.Value = raiderCoins.Value - penalty
 				targetCoins.Value = targetCoins.Value + penalty
 			end
 		end
 		
-		-- Invia segnale Client per applicare BodyVelocity di lancio e camera shake
+		-- Invia segnale Client per applicare BodyVelocity di lancio e camera shake (passando il tier)
 		local defenseTriggerRemote = ReplicatedStorage:FindFirstChild("GnomeTriggerRemote")
 		if defenseTriggerRemote and defenseTriggerRemote:IsA("RemoteEvent") then
-			defenseTriggerRemote:FireClient(player, targetPlayer)
+			defenseTriggerRemote:FireClient(player, targetPlayer, targetDefenderTier)
 		end
 	else
 		-- RAID RIUSCITO: Ruba le monete accumulatesi nella cassa

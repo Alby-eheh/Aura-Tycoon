@@ -1,0 +1,23 @@
+{
+  "ClassName": "Part",
+  "Properties": {
+    "Name": "AuraCEO",
+    "Size": [2.5, 3.5, 2.5],
+    "Color": [255, 215, 0],
+    "Anchored": true,
+    "Material": "Neon",
+    "CanCollide": true
+  },
+  "Children": [
+    {
+      "ClassName": "Part",
+      "Properties": {
+        "Name": "GoldCrown",
+        "Size": [2.2, 0.6, 2.2],
+        "Color": [255, 196, 0],
+        "Anchored": true,
+        "Material": "Glass"
+      }
+    }
+  ]
+}

@@ -116,7 +116,7 @@ local function generatePlot(plotNumber: number)
 	gnomePad.Color = Color3.fromRGB(255, 196, 0)
 	gnomePad.Material = Enum.Material.Neon
 	gnomePad.Parent = mapFolder
-	createFloatingLabel(gnomePad, "BUY GNOME\n(95 Coins / Robux)", Color3.fromRGB(255, 196, 0))
+	createFloatingLabel(gnomePad, "UPGRADE DEFENDER\n(Costo: Dinamico)", Color3.fromRGB(255, 196, 0))
 
 	-- 5. Raid Portal (Neon Rosso) per avviare raid
 	local raidPortal = Instance.new("Part")
@@ -198,7 +198,7 @@ local function generatePlot(plotNumber: number)
 		if plotData and plotData.Owner == player then
 			runWithDebounce(player, function()
 				local TycoonService = require(ServerScriptService.TycoonService)
-				TycoonService.buyGnome(player)
+				TycoonService.upgradeDefender(player)
 			end)
 		end
 	end)
@@ -299,48 +299,87 @@ function MapService.init()
 	end
 end
 
--- Spawna o rimuove graficamente la statuetta dello Gnomo nel lotto del giocatore
-function MapService.setGnomeVisual(player: Player, active: boolean)
+-- Spawna o rimuove graficamente la statuetta del Difensore Aura nel lotto del giocatore
+function MapService.setDefenderVisual(player: Player, tier: number, active: boolean)
 	local plotId = player:GetAttribute("PlotId")
 	if not plotId then return end
 	
 	local plotData = activePlots[plotId]
 	if not plotData then return end
 	
-	if active then
-		if plotData.GnomePart then return end
+	-- Pulisci difensore precedente se attivo
+	if plotData.GnomePart then
+		plotData.GnomePart:Destroy()
+		plotData.GnomePart = nil
+	end
+	
+	if active and tier > 0 then
+		local defenderName = "Incel"
+		local labelText = "INCEL DEFENDER"
+		local labelColor = Color3.fromRGB(139, 69, 19)
 		
-		-- Crea statuetta Gnomo
-		local gnomeModel = Instance.new("Part")
-		gnomeModel.Name = "GnomeDefender"
-		gnomeModel.Size = Vector3.new(2, 3, 2)
-		gnomeModel.Position = PLOT_COORDINATES[plotId] + Vector3.new(0, 2, 0)
-		gnomeModel.Color = Color3.fromRGB(255, 0, 0)
-		gnomeModel.Material = Enum.Material.Wood
-		gnomeModel.Anchored = true
-		gnomeModel.Parent = mapFolder
+		if tier == 2 then
+			defenderName = "Goat"
+			labelText = "GOAT DEFENDER"
+			labelColor = Color3.fromRGB(240, 240, 240)
+		elseif tier == 3 then
+			defenderName = "Sigma"
+			labelText = "SIGMA DEFENDER"
+			labelColor = Color3.fromRGB(0, 240, 255)
+		elseif tier == 4 then
+			defenderName = "AuraCEO"
+			labelText = "AURA CEO DEFENDER"
+			labelColor = Color3.fromRGB(255, 196, 0)
+		end
 		
-		-- Aggiungi il capello (testa verde conica)
-		local hat = Instance.new("Part")
-		hat.Name = "GnomeHat"
-		hat.Size = Vector3.new(2, 2, 2)
-		hat.Position = gnomeModel.Position + Vector3.new(0, 2.5, 0)
-		hat.Color = Color3.fromRGB(0, 200, 0)
-		hat.Material = Enum.Material.Plastic
-		hat.Shape = Enum.PartType.Ball
-		hat.Anchored = true
-		hat.Parent = mapFolder
+		-- Prova a clonare dall'Assets Folder in ReplicatedStorage
+		local ReplicatedStorage = game:GetService("ReplicatedStorage")
+		local assets = ReplicatedStorage:FindFirstChild("Assets")
+		local defendersFolder = assets and assets:FindFirstChild("Defenders")
+		local targetTemplate = defendersFolder and defendersFolder:FindFirstChild(defenderName)
 		
-		plotData.GnomePart = gnomeModel
-		gnomeModel.Destroying:Connect(function()
-			hat:Destroy()
-		end)
+		local cloneInstance = nil
+		if targetTemplate then
+			cloneInstance = targetTemplate:Clone()
+			if cloneInstance:IsA("PVInstance") then
+				cloneInstance:PivotTo(CFrame.new(PLOT_COORDINATES[plotId] + Vector3.new(0, 2, 0)))
+			end
+			cloneInstance.Parent = mapFolder
+			print("[MapService] Spawnato difensore reale da Assets: " .. defenderName)
+		else
+			-- Fallback procedurale se l'utente non ha ancora compilato gli Assets o in offline test
+			local fallbackPart = Instance.new("Part")
+			fallbackPart.Name = defenderName
+			fallbackPart.Size = tier == 4 and Vector3.new(2.5, 3.5, 2.5) or Vector3.new(2, 3, 2)
+			fallbackPart.Position = PLOT_COORDINATES[plotId] + Vector3.new(0, 2, 0)
+			fallbackPart.Anchored = true
+			fallbackPart.CanCollide = true
+			
+			if tier == 1 then
+				fallbackPart.Color = Color3.fromRGB(139, 69, 19)
+				fallbackPart.Material = Enum.Material.Wood
+			elseif tier == 2 then
+				fallbackPart.Color = Color3.fromRGB(245, 245, 245)
+				fallbackPart.Material = Enum.Material.Marble
+			elseif tier == 3 then
+				fallbackPart.Color = Color3.fromRGB(192, 192, 192)
+				fallbackPart.Material = Enum.Material.Metal
+			elseif tier == 4 then
+				fallbackPart.Color = Color3.fromRGB(255, 215, 0)
+				fallbackPart.Material = Enum.Material.Neon
+			end
+			
+			fallbackPart.Parent = mapFolder
+			cloneInstance = fallbackPart
+			print("[MapService] Spawnato difensore fallback procedurale: " .. defenderName)
+		end
 		
-		createFloatingLabel(gnomeModel, "GNOME SHIELD ACTIVE", Color3.fromRGB(255, 196, 0))
-	else
-		if plotData.GnomePart then
-			plotData.GnomePart:Destroy()
-			plotData.GnomePart = nil
+		plotData.GnomePart = cloneInstance
+		
+		-- Aggiungi l'etichetta 3D fluttuante sul modello/part
+		local labelPart = cloneInstance:IsA("Model") and (cloneInstance.PrimaryPart or cloneInstance:FindFirstChildWhichIsA("BasePart")) or cloneInstance
+		if labelPart and labelPart:IsA("Part") then
+			createFloatingLabel(labelPart, labelText, labelColor)
 		end
 	end
 end

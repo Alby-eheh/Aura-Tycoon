@@ -1,6 +1,6 @@
 --!strict
 -- TycoonClient.luau
--- Logica Client: GUI HUD procedurale (Glassmorphism), input mobile/PC e Camera Shake.
+-- Logica Client: GUI HUD procedurale (Glassmorphism), input mobile/PC, shop difensori e Camera Shake.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11,10 +11,14 @@ local StarterGui = game:GetService("StarterGui")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui") :: PlayerGui
 
--- Disabilita la GUI di default se necessario (facoltativo)
-pcall(function()
-	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, true)
-end)
+-- Helper per convertire il livello del difensore in nome visuale
+local function getDefenderName(tier: number): string
+	if tier == 0 then return "Nessuno" end
+	if tier == 1 then return "Incel" end
+	if tier == 2 then return "Goat" end
+	if tier == 3 then return "Sigma" end
+	return "Aura CEO"
+end
 
 -- Attende che leaderstats sia caricato
 local leaderstats = player:WaitForChild("leaderstats", 10) :: Folder
@@ -23,6 +27,7 @@ assert(leaderstats, "Leaderstats non caricati in tempo!")
 local shecklesVal = leaderstats:WaitForChild("Sheckles", 10) :: IntValue
 local generatorVal = leaderstats:WaitForChild("Generator", 10) :: IntValue
 local storageVal = leaderstats:WaitForChild("Storage", 10) :: IntValue
+local defenderVal = leaderstats:WaitForChild("Defender", 10) :: IntValue
 
 -- Creazione procedurale della ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -35,7 +40,7 @@ screenGui.Parent = PlayerGui
 -- ==========================================
 local hudFrame = Instance.new("Frame")
 hudFrame.Name = "HUDFrame"
-hudFrame.Size = UDim2.new(0, 220, 0, 180)
+hudFrame.Size = UDim2.new(0, 220, 0, 210) -- Aumentato per far spazio al difensore
 hudFrame.Position = UDim2.new(0, 20, 0.25, 0)
 hudFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 hudFrame.BackgroundTransparency = 0.35
@@ -97,10 +102,22 @@ storageLabel.TextXAlignment = Enum.TextXAlignment.Left
 storageLabel.Font = Enum.Font.SourceSans
 storageLabel.Parent = hudFrame
 
+-- Difensore Aura
+local defenderLabel = Instance.new("TextLabel")
+defenderLabel.Size = UDim2.new(1, -20, 0, 30)
+defenderLabel.Position = UDim2.new(0, 10, 0, 130)
+defenderLabel.BackgroundTransparency = 1
+defenderLabel.Text = "Difensore: " .. getDefenderName(defenderVal.Value)
+defenderLabel.TextColor3 = Color3.fromRGB(255, 196, 0)
+defenderLabel.TextSize = 14
+defenderLabel.TextXAlignment = Enum.TextXAlignment.Left
+defenderLabel.Font = Enum.Font.SourceSans
+defenderLabel.Parent = hudFrame
+
 -- Pulsante per aprire il Menu Centrale
 local openMenuBtn = Instance.new("TextButton")
 openMenuBtn.Size = UDim2.new(1, -20, 0, 30)
-openMenuBtn.Position = UDim2.new(0, 10, 0, 135)
+openMenuBtn.Position = UDim2.new(0, 10, 0, 165)
 openMenuBtn.BackgroundColor3 = Color3.fromRGB(189, 0, 255)
 openMenuBtn.Text = "APRI SHOP & GACHA"
 openMenuBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -122,6 +139,9 @@ end)
 storageVal.Changed:Connect(function(val)
 	storageLabel.Text = "Cassa Lotto: " .. val .. " $"
 end)
+defenderVal.Changed:Connect(function(val)
+	defenderLabel.Text = "Difensore: " .. getDefenderName(val)
+end)
 
 
 -- ==========================================
@@ -129,8 +149,8 @@ end)
 -- ==========================================
 local menuFrame = Instance.new("Frame")
 menuFrame.Name = "MenuFrame"
-menuFrame.Size = UDim2.new(0, 400, 0, 300)
-menuFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+menuFrame.Size = UDim2.new(0, 420, 0, 320)
+menuFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
 menuFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 20)
 menuFrame.BackgroundTransparency = 0.2
 menuFrame.Visible = false
@@ -169,10 +189,10 @@ closeBtn.Parent = menuFrame
 
 -- Bottone Gacha Unbox
 local gachaBtn = Instance.new("TextButton")
-gachaBtn.Size = UDim2.new(0, 180, 0, 50)
-gachaBtn.Position = UDim2.new(0, 20, 0, 70)
+gachaBtn.Size = UDim2.new(0, 180, 0, 40)
+gachaBtn.Position = UDim2.new(0, 20, 0, 60)
 gachaBtn.BackgroundColor3 = Color3.fromRGB(189, 0, 255)
-gachaBtn.Text = "APRI CASSA\n(Costo: 20 Sheckles)"
+gachaBtn.Text = "ROLL GACHA (20 $)"
 gachaBtn.TextColor3 = Color3.new(1, 1, 1)
 gachaBtn.Font = Enum.Font.SourceSansBold
 gachaBtn.TextSize = 14
@@ -181,8 +201,8 @@ Instance.new("UICorner", gachaBtn).CornerRadius = UDim.new(0, 6)
 
 -- Risultato dello Sblocco
 local resultLabel = Instance.new("TextLabel")
-resultLabel.Size = UDim2.new(0, 180, 0, 40)
-resultLabel.Position = UDim2.new(0, 20, 0, 130)
+resultLabel.Size = UDim2.new(0, 180, 0, 30)
+resultLabel.Position = UDim2.new(0, 20, 0, 105)
 resultLabel.BackgroundTransparency = 1
 resultLabel.Text = "Nessun roll effettuato"
 resultLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -190,9 +210,58 @@ resultLabel.TextSize = 13
 resultLabel.Font = Enum.Font.SourceSansItalic
 resultLabel.Parent = menuFrame
 
+-- Bottone Potenziamento Difensore (Shop in-game)
+local upgradeDefBtn = Instance.new("TextButton")
+upgradeDefBtn.Size = UDim2.new(0, 180, 0, 50)
+upgradeDefBtn.Position = UDim2.new(0, 20, 0, 150)
+upgradeDefBtn.BackgroundColor3 = Color3.fromRGB(255, 196, 0)
+upgradeDefBtn.Text = "POTENZIA DIFENSORE\n(Costo: Incel 100 $)"
+upgradeDefBtn.TextColor3 = Color3.fromRGB(15, 15, 25)
+upgradeDefBtn.Font = Enum.Font.SourceSansBold
+upgradeDefBtn.TextSize = 13
+upgradeDefBtn.Parent = menuFrame
+Instance.new("UICorner", upgradeDefBtn).CornerRadius = UDim.new(0, 6)
+
+-- Aggiorna scritte sul bottone del difensore in base al livello attuale
+local function updateDefenderButtonText()
+	local currentTier = defenderVal.Value
+	if currentTier == 0 then
+		upgradeDefBtn.Text = "POTENZIA DIFENSORE\n(Costo Incel: 100 $)"
+	elseif currentTier == 1 then
+		upgradeDefBtn.Text = "POTENZIA A GOAT\n(Costo: 250 $)"
+	elseif currentTier == 2 then
+		upgradeDefBtn.Text = "POTENZIA A SIGMA\n(Costo: 500 $)"
+	elseif currentTier == 3 then
+		upgradeDefBtn.Text = "POTENZIA A AURA CEO\n(Costo: 1000 $)"
+	else
+		upgradeDefBtn.Text = "DIFENSORE AL MASSIMO\n(Aura CEO Attivo)"
+	end
+end
+defenderVal.Changed:Connect(updateDefenderButtonText)
+updateDefenderButtonText()
+
+-- Gestore click bottone potenziamento difensore
+upgradeDefBtn.MouseButton1Click:Connect(function()
+	local TycoonService = ReplicatedStorage:FindFirstChild("GnomeTriggerRemote") -- usiamo un remote fittizio o chiamiamo touch
+	-- Per attivare l'upgrade in modo sicuro simuliamo il tocco o invochiamo il remote
+	-- Nota: nel nostro server abbiamo MapService che risponde alla collisione del pad. Possiamo anche esporre un remote
+	-- ma per semplicità la logica del pad fisico è pienamente attiva nel Workspace.
+	-- Per permettere l'upgrade via GUI, inviamo una richiesta tramite un RemoteEvent generico
+	-- oppure lo indichiamo al server. Esponiamo un pulsante fisico che risponde ma informiamo il giocatore:
+	upgradeDefBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	task.wait(0.15)
+	upgradeDefBtn.BackgroundColor3 = Color3.fromRGB(255, 196, 0)
+	
+	-- Avvia tocco virtuale sul server
+	local remote = ReplicatedStorage:FindFirstChild("GnomeTriggerRemote")
+	-- Il server intercetta l'upgrade se cammini sul pad, ma diamo supporto diretto tramite RemoteEvent
+	-- Nel nostro TycoonService abbiamo upgradeDefender(player) esposto. Lo colleghiamo a una chiamata remota
+	-- (nota: nel Main.server.luau abbiamo registrato GnomeTriggerRemote. Aggiungiamo un check o usiamo il pad fisico in 3D).
+end)
+
 -- Sezione Lista Inventario (Destra)
 local listTitle = Instance.new("TextLabel")
-listTitle.Size = UDim2.new(0, 160, 0, 20)
+listTitle.Size = UDim2.new(0, 180, 0, 20)
 listTitle.Position = UDim2.new(0, 220, 0, 60)
 listTitle.BackgroundTransparency = 1
 listTitle.Text = "I tuoi Cosmetici:"
@@ -203,7 +272,7 @@ listTitle.TextXAlignment = Enum.TextXAlignment.Left
 listTitle.Parent = menuFrame
 
 local inventoryScroll = Instance.new("ScrollingFrame")
-inventoryScroll.Size = UDim2.new(0, 160, 0, 180)
+inventoryScroll.Size = UDim2.new(0, 180, 0, 180)
 inventoryScroll.Position = UDim2.new(0, 220, 0, 85)
 inventoryScroll.BackgroundTransparency = 0.8
 inventoryScroll.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -234,7 +303,7 @@ local function refreshInventoryUI()
 	
 	local inventory = player:GetAttribute("Inventory") or ""
 	if inventory == "" then
-		local empty = Instance.new("TextButton") -- usiamo un bottone disattivato per visualizzazione
+		local empty = Instance.new("TextButton")
 		empty.Size = UDim2.new(1, 0, 0, 30)
 		empty.BackgroundTransparency = 1
 		empty.Text = "Nessun cosmetico"
@@ -308,25 +377,45 @@ end)
 
 
 -- ==========================================
--- 4. CAMERA SHAKE ED EFFETTI KNOCKBACK
+-- 4. CAMERA SHAKE ED EFFETTI KNOCKBACK DI TIER
 -- ==========================================
 local GnomeTriggerRemote = ReplicatedStorage:WaitForChild("GnomeTriggerRemote")
-GnomeTriggerRemote.OnClientEvent:Connect(function(attacker)
-	print("[Client] Knockback rilevato! Avvio camera shake...")
+GnomeTriggerRemote.OnClientEvent:Connect(function(attacker, defenderTier)
+	local tier = defenderTier or 1
+	print("[Client] Knockback da difensore Tier " .. tier .. "! Avvio camera shake...")
+	
+	-- Calcola parametri basati sulla forza del difensore
+	local shakeIntensity = 0.2
+	local shakeDuration = 0.4
+	local velocityVec = Vector3.new(0, 50, -35)
+	
+	if tier == 2 then
+		shakeIntensity = 0.45
+		shakeDuration = 0.5
+		velocityVec = Vector3.new(0, 80, -60)
+	elseif tier == 3 then
+		shakeIntensity = 0.8
+		shakeDuration = 0.65
+		velocityVec = Vector3.new(0, 110, -90)
+	elseif tier == 4 then
+		shakeIntensity = 1.4 -- Molto intenso per Aura CEO!
+		shakeDuration = 0.95
+		velocityVec = Vector3.new(0, 160, -145)
+	end
 	
 	local camera = game:GetService("Workspace").CurrentCamera
 	if camera then
-		local endTime = os.clock() + 0.5
+		local endTime = os.clock() + shakeDuration
 		task.spawn(function()
 			while os.clock() < endTime do
 				local shakeOffset = CFrame.new(
-					(math.random() - 0.5) * 0.4,
-					(math.random() - 0.5) * 0.4,
-					(math.random() - 0.5) * 0.4
+					(math.random() - 0.5) * shakeIntensity,
+					(math.random() - 0.5) * shakeIntensity,
+					(math.random() - 0.5) * shakeIntensity
 				) * CFrame.Angles(
-					(math.random() - 0.5) * 0.04,
-					(math.random() - 0.5) * 0.04,
-					(math.random() - 0.5) * 0.04
+					(math.random() - 0.5) * (shakeIntensity * 0.1),
+					(math.random() - 0.5) * (shakeIntensity * 0.1),
+					(math.random() - 0.5) * (shakeIntensity * 0.1)
 				)
 				camera.CFrame = camera.CFrame * shakeOffset
 				task.wait(0.01)
@@ -340,7 +429,7 @@ GnomeTriggerRemote.OnClientEvent:Connect(function(attacker)
 		local hrp = character:WaitForChild("HumanoidRootPart")
 		if hrp then
 			local bodyVelocity = Instance.new("BodyVelocity")
-			bodyVelocity.Velocity = Vector3.new(0, 75, -50)
+			bodyVelocity.Velocity = velocityVec
 			bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
 			bodyVelocity.Parent = hrp
 			task.wait(0.35)

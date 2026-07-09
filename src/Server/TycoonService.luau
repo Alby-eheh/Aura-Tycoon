@@ -1,6 +1,6 @@
 --!strict
 -- TycoonService.luau
--- Gestisce la generazione idle di risorse sul server, leaderstats e azioni fisiche.
+-- Gestisce la generazione idle di risorse sul server, leaderstats e difensori Aura.
 
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
@@ -9,16 +9,24 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local TycoonDataStore = nil
 local successDataStore, err = pcall(function()
-	TycoonDataStore = DataStoreService:GetDataStore("TycoonSaveSystem_2026_v2")
+	TycoonDataStore = DataStoreService:GetDataStore("TycoonSaveSystem_2026_v3")
 end)
 
 if not successDataStore or not TycoonDataStore then
-	warn("[TycoonService] DataStore inaccessibile (il gioco potrebbe non essere pubblicato o l'accesso alle API non è abilitato). Verrà usata la memoria locale fittizia.")
+	warn("[TycoonService] DataStore inaccessibile. Verrà usata la memoria locale fittizia.")
 end
 
 local TycoonService = {}
 local plots = {} -- Mappa UserId -> Plot
 local INCOME_TICK_RATE = 1.0 -- Secondi
+
+-- Definizione costi dei difensori Aura
+local DEFENDER_UPGRADE_COSTS = {
+	[1] = 100,  -- Incel (Tier 1)
+	[2] = 250,  -- Goat (Tier 2)
+	[3] = 500,  -- Sigma (Tier 3)
+	[4] = 1000  -- Aura CEO (Tier 4)
+}
 
 -- Carica o inizializza i dati del Tycoon del giocatore
 function TycoonService.loadData(player: Player)
@@ -37,21 +45,27 @@ function TycoonService.loadData(player: Player)
 	local genLvl = 1
 	local storageCoins = 0
 	local walletCoins = 100 -- Partenza
+	local defenderLvl = 0
 	local gnomeTime = 0
 	
 	if savedData then
 		genLvl = savedData.GeneratorLevel or 1
 		storageCoins = savedData.Storage or 0
 		walletCoins = savedData.Sheckles or 100
-		gnomeTime = savedData.GnomeActiveUntil or 0
+		defenderLvl = savedData.DefenderTier or 0
+		gnomeTime = savedData.DefenderActiveUntil or 0
 	end
 	
 	plots[userId] = {
 		Owner = player,
 		GeneratorLevel = genLvl,
 		Storage = storageCoins,
+		DefenderTier = defenderLvl,
 		GnomeActiveUntil = gnomeTime
 	}
+	
+	player:SetAttribute("DefenderTier", defenderLvl)
+	player:SetAttribute("GnomeActiveUntil", gnomeTime)
 	
 	-- Inizializza i leaderstats visibili per Roblox Studio
 	local leaderstats = Instance.new("Folder")
@@ -72,16 +86,20 @@ function TycoonService.loadData(player: Player)
 	storageVal.Name = "Storage"
 	storageVal.Value = storageCoins
 	storageVal.Parent = leaderstats
+
+	local defenderVal = Instance.new("IntValue")
+	defenderVal.Name = "Defender"
+	defenderVal.Value = defenderLvl
+	defenderVal.Parent = leaderstats
 	
-	-- Se il caricamento rileva uno Gnomo ancora attivo
-	if gnomeTime > os.time() then
-		player:SetAttribute("GnomeActiveUntil", gnomeTime)
+	-- Se il caricamento rileva un difensore ancora attivo
+	if gnomeTime > os.time() and defenderLvl > 0 then
 		task.spawn(function()
 			local MapService = require(ServerScriptService:WaitForChild("MapService"))
-			MapService.setGnomeVisual(player, true)
+			MapService.setDefenderVisual(player, defenderLvl, true)
 			task.wait(gnomeTime - os.time())
 			if player.Parent then
-				MapService.setGnomeVisual(player, false)
+				MapService.setDefenderVisual(player, defenderLvl, false)
 			end
 		end)
 	end
@@ -132,8 +150,8 @@ function TycoonService.upgradeGenerator(player: Player)
 	end
 end
 
--- Acquista lo Gnomo Difensivo
-function TycoonService.buyGnome(player: Player)
+-- Potenzia il difensore Aura (Incel -> Goat -> Sigma -> Aura CEO)
+function TycoonService.upgradeDefender(player: Player)
 	local userId = player.UserId
 	local plot = plots[userId]
 	if not plot then return end
@@ -141,33 +159,47 @@ function TycoonService.buyGnome(player: Player)
 	local leaderstats = player:FindFirstChild("leaderstats")
 	if leaderstats then
 		local sheckles = leaderstats:FindFirstChild("Sheckles")
-		if sheckles then
-			local cost = 95
+		local defenderVal = leaderstats:FindFirstChild("Defender")
+		
+		if sheckles and defenderVal then
+			local currentTier = plot.DefenderTier
+			local nextTier = currentTier + 1
+			
+			if nextTier > 4 then
+				warn("[TycoonService] Difensore già al livello massimo (Aura CEO) per " .. player.Name)
+				return
+			end
+			
+			local cost = DEFENDER_UPGRADE_COSTS[nextTier]
 			if sheckles.Value >= cost then
 				sheckles.Value = sheckles.Value - cost
+				plot.DefenderTier = nextTier
+				defenderVal.Value = nextTier
 				
-				-- Imposta lo Gnomo per 10 minuti (600 secondi)
+				-- Imposta lo scudo per 10 minuti (600 secondi)
 				local duration = 600
 				plot.GnomeActiveUntil = os.time() + duration
+				
+				player:SetAttribute("DefenderTier", nextTier)
 				player:SetAttribute("GnomeActiveUntil", plot.GnomeActiveUntil)
 				
 				-- Aggiorna la fisica nel Workspace
 				local MapService = require(ServerScriptService:WaitForChild("MapService"))
-				MapService.setGnomeVisual(player, true)
+				MapService.setDefenderVisual(player, nextTier, true)
 				
 				task.spawn(function()
 					task.wait(duration)
 					if player.Parent then
 						local now = os.time()
 						if now >= (player:GetAttribute("GnomeActiveUntil") or 0) then
-							MapService.setGnomeVisual(player, false)
+							MapService.setDefenderVisual(player, nextTier, false)
 						end
 					end
 				end)
 				
-				print("[TycoonService] Gnomo piazzato per " .. player.Name)
+				print("[TycoonService] Difensore potenziato a Lvl " .. nextTier .. " per " .. player.Name)
 			else
-				warn("[TycoonService] Sheckles insufficienti per lo Gnomo: " .. player.Name)
+				warn("[TycoonService] Soldi insufficienti per potenziare il difensore di " .. player.Name)
 			end
 		end
 	end
@@ -224,7 +256,8 @@ Players.PlayerRemoving:Connect(function(player)
 				GeneratorLevel = plot.GeneratorLevel,
 				Storage = plot.Storage,
 				Sheckles = walletCoins,
-				GnomeActiveUntil = plot.GnomeActiveUntil
+				DefenderTier = plot.DefenderTier,
+				DefenderActiveUntil = plot.GnomeActiveUntil
 			})
 		end)
 	end
