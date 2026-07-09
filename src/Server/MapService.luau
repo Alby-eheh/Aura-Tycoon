@@ -632,11 +632,24 @@ function MapService.setDefenderVisual(player: Player, tier: number, active: bool
 		local cloneInstance = nil
 		if targetTemplate then
 			cloneInstance = targetTemplate:Clone()
+			
+			-- Forza l'ancoraggio e la collisione di tutte le parti del modello per evitare che cadano nel vuoto
+			for _, descendant in ipairs(cloneInstance:GetDescendants()) do
+				if descendant:IsA("BasePart") then
+					descendant.Anchored = true
+					descendant.CanCollide = true
+				end
+			end
+			
 			if cloneInstance:IsA("PVInstance") then
-				cloneInstance:PivotTo(CFrame.new(PLOT_COORDINATES[plotId] + Vector3.new(0, 2, 0)))
+				cloneInstance:PivotTo(CFrame.new(PLOT_COORDINATES[plotId] + Vector3.new(0, 2.5, 0)))
 			end
 			cloneInstance.Parent = mapFolder
-			print("[MapService] Spawnato difensore reale da Assets: " .. defenderName)
+			
+			-- Trova una parte fisica per stampare la coordinata di spawn a scopo di debug
+			local debugPart = cloneInstance:IsA("Model") and (cloneInstance.PrimaryPart or cloneInstance:FindFirstChildWhichIsA("BasePart")) or cloneInstance
+			local posStr = debugPart and debugPart:IsA("BasePart") and tostring(debugPart.Position) or "N/D"
+			print("[MapService] Spawnato difensore reale da Assets: " .. defenderName .. " alla posizione: " .. posStr)
 		else
 			local fallbackPart = Instance.new("Part")
 			fallbackPart.Name = defenderName
