@@ -23,9 +23,9 @@ local PLOT_COLORS = {
 	[4] = Color3.fromRGB(34, 177, 76)   -- Verde
 }
 
-local COIN_SOUND_ID = "rbxassetid://4612375239"
-local ALARM_SOUND_ID = "rbxassetid://1612140410"
-local BOING_SOUND_ID = "rbxassetid://4010537096"
+local COIN_SOUND_ID = "rbxassetid://9114223126"
+local ALARM_SOUND_ID = "rbxassetid://9113611311"
+local BOING_SOUND_ID = "rbxassetid://9114387227"
 
 local activePlots = {} -- Mappa PlotNumber -> { Owner: Player, PlotPart: Part, GnomePart: Part? }
 local debounces = {} -- Mappa Player -> boolean

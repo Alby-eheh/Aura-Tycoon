@@ -376,3 +376,5 @@ promptMomentRemote.OnClientEvent:Connect(function(actionType, score)
 	task.wait(4)
 	popup:Destroy()
 end)
+
+return {}
