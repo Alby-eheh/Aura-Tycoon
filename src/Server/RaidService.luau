@@ -37,6 +37,11 @@ raidRemote.OnServerEvent:Connect(function(player: Player, targetPlayer: Player)
 		-- GNOMO ATTIVO: Respinge il raider
 		print("[RaidService] Gnome protettivo scattato per " .. targetPlayer.Name)
 		
+		-- Attiva effetti audio e particelle nel Workspace (richiamo locale per evitare dipendenza circolare)
+		local ServerScriptService = game:GetService("ServerScriptService")
+		local MapService = require(ServerScriptService:WaitForChild("MapService"))
+		MapService.playGnomeDefenseEffect(targetPlayer)
+		
 		-- Penalizzazione del raider e lancio fisico sul client
 		player:SetAttribute("Stunned", true)
 		

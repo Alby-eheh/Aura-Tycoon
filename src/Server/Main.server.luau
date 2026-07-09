@@ -19,23 +19,39 @@ local function ensureRemoteEvent(name: string): RemoteEvent
 	return remote :: RemoteEvent
 end
 
+local function ensureRemoteFunction(name: string): RemoteFunction
+	local remote = ReplicatedStorage:FindFirstChild(name)
+	if not remote then
+		local newRemote = Instance.new("RemoteFunction")
+		newRemote.Name = name
+		newRemote.Parent = ReplicatedStorage
+		print("[SERVER BOOTSTRAP] Creato RemoteFunction: " .. name)
+		return newRemote
+	end
+	return remote :: RemoteFunction
+end
+
 ensureRemoteEvent("UpdateStorageRemote")
 ensureRemoteEvent("ExecuteRaidRemote")
 ensureRemoteEvent("GnomeTriggerRemote")
 ensureRemoteEvent("PromptMomentCapture")
 ensureRemoteEvent("UpdateMomentsBillboard")
 ensureRemoteEvent("ShowSystemAlert")
+ensureRemoteFunction("OpenGachaRemote")
+ensureRemoteEvent("EquipCosmeticRemote")
 
 local TycoonService = require(ServerScriptService:WaitForChild("TycoonService"))
 local RaidService = require(ServerScriptService:WaitForChild("RaidService"))
 local ServerRestartService = require(ServerScriptService:WaitForChild("ServerRestartService"))
 local MonetizationService = require(ServerScriptService:WaitForChild("MonetizationService"))
 local MapService = require(ServerScriptService:WaitForChild("MapService"))
+local GachaService = require(ServerScriptService:WaitForChild("GachaService"))
 
 -- 1. Inizializzazione Servizi
 MonetizationService.init()
 ServerRestartService.init()
 MapService.init()
+GachaService.init()
 
 -- 2. Hook per PlayerAdded/PlayerRemoving per caricare/scaricare i dati
 Players.PlayerAdded:Connect(function(player)

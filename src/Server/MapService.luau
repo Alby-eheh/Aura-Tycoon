@@ -1,6 +1,6 @@
 --!strict
 -- MapService.luau
--- Generatore procedurale di lotti e pulsanti fisici nel Workspace.
+-- Generatore procedurale di lotti, pulsanti fisici, audio spaziale e particelle.
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -22,6 +22,10 @@ local PLOT_COLORS = {
 	[3] = Color3.fromRGB(255, 127, 39),  -- Arancio
 	[4] = Color3.fromRGB(34, 177, 76)   -- Verde
 }
+
+local COIN_SOUND_ID = "rbxassetid://4612375239"
+local ALARM_SOUND_ID = "rbxassetid://1612140410"
+local BOING_SOUND_ID = "rbxassetid://4010537096"
 
 local activePlots = {} -- Mappa PlotNumber -> { Owner: Player, PlotPart: Part, GnomePart: Part? }
 local debounces = {} -- Mappa Player -> boolean
@@ -85,6 +89,13 @@ local function generatePlot(plotNumber: number)
 	claimPad.Parent = mapFolder
 	createFloatingLabel(claimPad, "CLAIM COINS\n(Passaci Sopra)", Color3.fromRGB(0, 255, 100))
 
+	-- Crea suono Claim locale spaziale
+	local claimSound = Instance.new("Sound")
+	claimSound.Name = "ClaimSound"
+	claimSound.SoundId = COIN_SOUND_ID
+	claimSound.Volume = 0.8
+	claimSound.Parent = claimPad
+
 	-- 3. Upgrade Pad (Neon Ciano) per potenziare il generatore
 	local upgradePad = Instance.new("Part")
 	upgradePad.Name = "UpgradePad"
@@ -118,6 +129,13 @@ local function generatePlot(plotNumber: number)
 	raidPortal.Parent = mapFolder
 	createFloatingLabel(raidPortal, "RAID PORTAL\n(Attacca Lotto Adiacente)", Color3.fromRGB(255, 0, 85))
 
+	-- Crea suono allarme raid
+	local raidSound = Instance.new("Sound")
+	raidSound.Name = "RaidSound"
+	raidSound.SoundId = ALARM_SOUND_ID
+	raidSound.Volume = 0.7
+	raidSound.Parent = raidPortal
+
 	-- Configura le collisioni fisiche (Touched Events)
 	claimPad.Touched:Connect(function(otherPart)
 		local character = otherPart.Parent
@@ -131,6 +149,25 @@ local function generatePlot(plotNumber: number)
 			runWithDebounce(player, function()
 				local TycoonService = require(ServerScriptService.TycoonService)
 				TycoonService.claimStorage(player)
+				claimSound:Play()
+				
+				-- Spawna particelle verdi al Claim
+				local attachment = Instance.new("Attachment")
+				attachment.Position = Vector3.new(0, 1, 0)
+				attachment.Parent = claimPad
+				
+				local emitter = Instance.new("ParticleEmitter")
+				emitter.Color = ColorSequence.new(Color3.fromRGB(0, 255, 100))
+				emitter.Size = NumberSequence.new(0.5, 1.2)
+				emitter.Speed = NumberRange.new(5, 15)
+				emitter.Rate = 50
+				emitter.Lifetime = NumberRange.new(0.4, 0.6)
+				emitter.Parent = attachment
+				
+				task.wait(0.2)
+				emitter.Enabled = false
+				task.wait(0.6)
+				attachment:Destroy()
 			end)
 		end
 	end)
@@ -146,6 +183,7 @@ local function generatePlot(plotNumber: number)
 			runWithDebounce(player, function()
 				local TycoonService = require(ServerScriptService.TycoonService)
 				TycoonService.upgradeGenerator(player)
+				claimSound:Play() -- riusa suono moneta
 			end)
 		end
 	end)
@@ -174,7 +212,6 @@ local function generatePlot(plotNumber: number)
 		local plotData = activePlots[plotNumber]
 		if plotData and plotData.Owner == player then
 			runWithDebounce(player, function()
-				-- Determina il bersaglio: attacca il lotto successivo (se occupato)
 				local targetPlotNum = (plotNumber % 4) + 1
 				local targetPlotData = activePlots[targetPlotNum]
 				
@@ -182,17 +219,17 @@ local function generatePlot(plotNumber: number)
 					local targetPlayer = targetPlotData.Owner
 					print("[MapService] Avvio raid da " .. player.Name .. " verso " .. targetPlayer.Name)
 					
-					-- Esegui l'evento del raid simulando la chiamata client
+					raidSound:Play()
+					
+					-- Esegui l'evento del raid sul server
 					local RaidService = require(ServerScriptService.RaidService)
-					-- Simula l'evento di rete
+					-- Simula l'evento lanciando la chiamata sul server
 					local remote = game:GetService("ReplicatedStorage"):FindFirstChild("ExecuteRaidRemote")
 					if remote and remote:IsA("RemoteEvent") then
-						remote:FireAllClients() -- per aggiornamenti visivi generici
+						remote:FireServer(targetPlayer)
 					end
-					-- Esegui direttamente sul server per sicurezza autoritativa
-					game:GetService("ReplicatedStorage").ExecuteRaidRemote:FireServer(targetPlayer)
 				else
-					print("[MapService] Lotto bersaglio #" .. targetPlotNum .. " non occupato da nessun giocatore.")
+					print("[MapService] Lotto bersaglio #" .. targetPlotNum .. " non occupato.")
 				end
 			end)
 		end
@@ -271,10 +308,9 @@ function MapService.setGnomeVisual(player: Player, active: boolean)
 	if not plotData then return end
 	
 	if active then
-		-- Se già c'è, non ricrearlo
 		if plotData.GnomePart then return end
 		
-		-- Crea statuetta Gnomo (un piccolo mattoncino rosso con testa verde)
+		-- Crea statuetta Gnomo
 		local gnomeModel = Instance.new("Part")
 		gnomeModel.Name = "GnomeDefender"
 		gnomeModel.Size = Vector3.new(2, 3, 2)
@@ -295,9 +331,7 @@ function MapService.setGnomeVisual(player: Player, active: boolean)
 		hat.Anchored = true
 		hat.Parent = mapFolder
 		
-		-- Raggruppa i riferimenti
 		plotData.GnomePart = gnomeModel
-		-- Lega la testa per essere distrutti insieme
 		gnomeModel.Destroying:Connect(function()
 			hat:Destroy()
 		end)
@@ -309,6 +343,40 @@ function MapService.setGnomeVisual(player: Player, active: boolean)
 			plotData.GnomePart = nil
 		end
 	end
+end
+
+-- Esegue l'effetto di rimbalzo ed esplosione dello Gnomo
+function MapService.playGnomeDefenseEffect(player: Player)
+	local plotId = player:GetAttribute("PlotId")
+	if not plotId then return end
+	local plotData = activePlots[plotId]
+	if not plotData or not plotData.PlotPart then return end
+	
+	-- Spawna suono di molla spaziale
+	local sound = Instance.new("Sound")
+	sound.SoundId = BOING_SOUND_ID
+	sound.Volume = 1.0
+	sound.Parent = plotData.PlotPart
+	sound:Play()
+	sound.Ended:Connect(function() sound:Destroy() end)
+	
+	-- Spawna effetto particelle esplosione dorata
+	local attachment = Instance.new("Attachment")
+	attachment.Position = Vector3.new(0, 2, 0)
+	attachment.Parent = plotData.PlotPart
+	
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0)) -- Oro
+	emitter.Size = NumberSequence.new(1.5, 3.5)
+	emitter.Speed = NumberRange.new(15, 35)
+	emitter.Rate = 120
+	emitter.Lifetime = NumberRange.new(0.4, 0.7)
+	emitter.Parent = attachment
+	
+	task.wait(0.2)
+	emitter.Enabled = false
+	task.wait(1.0)
+	attachment:Destroy()
 end
 
 return MapService
