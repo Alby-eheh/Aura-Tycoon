@@ -66,7 +66,6 @@ Players.PlayerAdded:Connect(function(player)
 	MonetizationService.trackPlaytime(player)
 	
 	-- Configura attributi dimostrativi
-	player:SetAttribute("PlotId", player.UserId)
 	player:SetAttribute("GnomeActiveUntil", 0)
 	player:SetAttribute("IsActiveSpender", true) -- Per test dei Creator Rewards
 end)
@@ -76,7 +75,6 @@ for _, player in ipairs(Players:GetPlayers()) do
 	task.spawn(function()
 		TycoonService.loadData(player)
 		MonetizationService.trackPlaytime(player)
-		player:SetAttribute("PlotId", player.UserId)
 		player:SetAttribute("GnomeActiveUntil", 0)
 		player:SetAttribute("IsActiveSpender", true)
 	end)
