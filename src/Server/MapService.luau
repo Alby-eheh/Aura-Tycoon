@@ -316,7 +316,6 @@ function MapService.init()
 	local sgFront = Instance.new("SurfaceGui")
 	sgFront.Name = "FeedFront"
 	sgFront.Face = Enum.NormalId.Front
-	sgFront.SizingMode = Enum.SurfaceGuiSizingMode.Pixels
 	sgFront.Parent = display
 
 	local textFront = Instance.new("TextLabel")
@@ -335,7 +334,6 @@ function MapService.init()
 	local sgBack = Instance.new("SurfaceGui")
 	sgBack.Name = "FeedBack"
 	sgBack.Face = Enum.NormalId.Back
-	sgBack.SizingMode = Enum.SurfaceGuiSizingMode.Pixels
 	sgBack.Parent = display
 
 	local textBack = Instance.new("TextLabel")

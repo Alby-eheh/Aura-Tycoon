@@ -21,13 +21,12 @@ local function getDefenderName(tier: number): string
 end
 
 -- Attende che leaderstats sia caricato
-local leaderstats = player:WaitForChild("leaderstats", 10) :: Folder
-assert(leaderstats, "Leaderstats non caricati in tempo!")
+local leaderstats = player:WaitForChild("leaderstats") :: Folder
 
-local shecklesVal = leaderstats:WaitForChild("Sheckles", 10) :: IntValue
-local generatorVal = leaderstats:WaitForChild("Generator", 10) :: IntValue
-local storageVal = leaderstats:WaitForChild("Storage", 10) :: IntValue
-local defenderVal = leaderstats:WaitForChild("Defender", 10) :: IntValue
+local shecklesVal = leaderstats:WaitForChild("Sheckles") :: IntValue
+local generatorVal = leaderstats:WaitForChild("Generator") :: IntValue
+local storageVal = leaderstats:WaitForChild("Storage") :: IntValue
+local defenderVal = leaderstats:WaitForChild("Defender") :: IntValue
 
 -- Creazione procedurale della ScreenGui
 local screenGui = Instance.new("ScreenGui")
