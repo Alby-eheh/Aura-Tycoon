@@ -74,25 +74,72 @@ local function generatePlot(plotNumber: number)
 	local center = PLOT_COORDINATES[plotNumber]
 	local color = PLOT_COLORS[plotNumber]
 	
-	-- 1. Base del Lotto
-	local base = Instance.new("Part")
-	base.Name = "PlotBase_" .. plotNumber
-	base.Size = Vector3.new(60, 1, 60)
-	base.Position = center
-	base.Anchored = true
-	base.Color = color
-	base.Material = Enum.Material.Concrete
-	base.Parent = mapFolder
+	-- 1. Base del Lotto Arrotondata (Stile Toy Block Pastello)
+	local plotFolder = Instance.new("Folder")
+	plotFolder.Name = "Plot_" .. plotNumber
+	plotFolder.Parent = mapFolder
+	
+	local pastelGreen = Color3.fromRGB(115, 175, 120) -- Verde pastello salvia
+	local bevelRadius = 3
+	local baseHeight = 1
+	
+	local function createBasePart(name: string, size: Vector3, pos: Vector3)
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Size = size
+		part.Position = pos
+		part.Color = pastelGreen
+		part.Material = Enum.Material.SmoothPlastic
+		part.Anchored = true
+		part.Parent = plotFolder
+		return part
+	end
+	
+	-- Crea la croce di riempimento centrale
+	createBasePart("BaseCenter", Vector3.new(60 - bevelRadius * 2, baseHeight, 60 - bevelRadius * 2), center)
+	createBasePart("BaseNS", Vector3.new(60 - bevelRadius * 2, baseHeight, 60), center)
+	createBasePart("BaseEW", Vector3.new(60, baseHeight, 60 - bevelRadius * 2), center)
+	
+	-- 4 Cilindri d'angolo per l'arrotondamento (Bevel)
+	local function createCornerCylinder(offset: Vector3)
+		local cyl = Instance.new("Part")
+		cyl.Name = "BaseCorner"
+		cyl.Shape = Enum.PartType.Cylinder
+		cyl.Size = Vector3.new(baseHeight, bevelRadius * 2, bevelRadius * 2)
+		cyl.CFrame = CFrame.new(center + offset) * CFrame.Angles(0, 0, math.rad(90))
+		cyl.Color = pastelGreen
+		cyl.Material = Enum.Material.SmoothPlastic
+		cyl.Anchored = true
+		cyl.Parent = plotFolder
+	end
+	
+	local inset = 30 - bevelRadius
+	createCornerCylinder(Vector3.new(-inset, 0, -inset))
+	createCornerCylinder(Vector3.new(inset, 0, -inset))
+	createCornerCylinder(Vector3.new(-inset, 0, inset))
+	createCornerCylinder(Vector3.new(inset, 0, inset))
+	
+	-- Piattaforma del bordo colorata (identificatore del lotto del giocatore)
+	local ring = Instance.new("Part")
+	ring.Name = "PlotOwnerBorder"
+	ring.Size = Vector3.new(12, 0.4, 12)
+	ring.Position = center + Vector3.new(0, 0.3, 0)
+	ring.Color = color
+	ring.Material = Enum.Material.SmoothPlastic
+	ring.Anchored = true
+	ring.Parent = plotFolder
+	Instance.new("UICorner", ring) -- Rende il bordo un cerchio liscio
 
-	-- 2. Claim Pad (Neon Verde) per incassare monete
+	-- 2. Claim Pad (Neon Verde Circolare)
 	local claimPad = Instance.new("Part")
 	claimPad.Name = "ClaimPad"
-	claimPad.Size = Vector3.new(6, 0.4, 6)
-	claimPad.Position = center + Vector3.new(-20, 0.5, -20)
+	claimPad.Shape = Enum.PartType.Cylinder
+	claimPad.Size = Vector3.new(0.4, 6, 6)
+	claimPad.CFrame = CFrame.new(center + Vector3.new(-18, 0.2, -18)) * CFrame.Angles(math.rad(90), 0, 0)
 	claimPad.Anchored = true
 	claimPad.Color = Color3.fromRGB(0, 255, 100)
 	claimPad.Material = Enum.Material.Neon
-	claimPad.Parent = mapFolder
+	claimPad.Parent = plotFolder
 	createFloatingLabel(claimPad, "CLAIM COINS\n(Passaci Sopra)", Color3.fromRGB(0, 255, 100))
 
 	-- Crea suono Claim locale spaziale
@@ -102,37 +149,40 @@ local function generatePlot(plotNumber: number)
 	claimSound.Volume = 0.8
 	claimSound.Parent = claimPad
 
-	-- 3. Upgrade Pad (Neon Ciano) per potenziare il generatore
+	-- 3. Upgrade Pad (Neon Ciano Circolare)
 	local upgradePad = Instance.new("Part")
 	upgradePad.Name = "UpgradePad"
-	upgradePad.Size = Vector3.new(6, 0.4, 6)
-	upgradePad.Position = center + Vector3.new(20, 0.5, -20)
+	upgradePad.Shape = Enum.PartType.Cylinder
+	upgradePad.Size = Vector3.new(0.4, 6, 6)
+	upgradePad.CFrame = CFrame.new(center + Vector3.new(18, 0.2, -18)) * CFrame.Angles(math.rad(90), 0, 0)
 	upgradePad.Anchored = true
 	upgradePad.Color = Color3.fromRGB(0, 240, 255)
 	upgradePad.Material = Enum.Material.Neon
-	upgradePad.Parent = mapFolder
+	upgradePad.Parent = plotFolder
 	createFloatingLabel(upgradePad, "UPGRADE GEN\n(Costo: Dinamico)", Color3.fromRGB(0, 240, 255))
 
-	-- 4. Gnome Shield Pad (Neon Giallo) per comprare/potenziare il difensore
+	-- 4. Gnome Shield Pad (Neon Giallo Circolare)
 	local gnomePad = Instance.new("Part")
 	gnomePad.Name = "GnomePad"
-	gnomePad.Size = Vector3.new(6, 0.4, 6)
-	gnomePad.Position = center + Vector3.new(0, 0.5, -20)
+	gnomePad.Shape = Enum.PartType.Cylinder
+	gnomePad.Size = Vector3.new(0.4, 6, 6)
+	gnomePad.CFrame = CFrame.new(center + Vector3.new(0, 0.2, -18)) * CFrame.Angles(math.rad(90), 0, 0)
 	gnomePad.Anchored = true
 	gnomePad.Color = Color3.fromRGB(255, 196, 0)
 	gnomePad.Material = Enum.Material.Neon
-	gnomePad.Parent = mapFolder
+	gnomePad.Parent = plotFolder
 	createFloatingLabel(gnomePad, "UPGRADE DEFENDER\n(Costo: Dinamico)", Color3.fromRGB(255, 196, 0))
 
-	-- 5. Raid Portal (Neon Rosso) per avviare raid
+	-- 5. Raid Portal (Neon Rosso Circolare)
 	local raidPortal = Instance.new("Part")
 	raidPortal.Name = "RaidPortal"
-	raidPortal.Size = Vector3.new(8, 0.4, 8)
-	raidPortal.Position = center + Vector3.new(0, 0.5, 20)
+	raidPortal.Shape = Enum.PartType.Cylinder
+	raidPortal.Size = Vector3.new(0.4, 8, 8)
+	raidPortal.CFrame = CFrame.new(center + Vector3.new(0, 0.2, 18)) * CFrame.Angles(math.rad(90), 0, 0)
 	raidPortal.Anchored = true
 	raidPortal.Color = Color3.fromRGB(255, 0, 85)
 	raidPortal.Material = Enum.Material.Neon
-	raidPortal.Parent = mapFolder
+	raidPortal.Parent = plotFolder
 	createFloatingLabel(raidPortal, "RAID PORTAL\n(Attacca Lotto Adiacente)", Color3.fromRGB(255, 0, 85))
 
 	-- Crea suono allarme raid
@@ -239,7 +289,7 @@ local function generatePlot(plotNumber: number)
 
 	activePlots[plotNumber] = {
 		Owner = nil,
-		PlotPart = base,
+		PlotPart = baseCenter,
 		GnomePart = nil
 	}
 end
@@ -291,40 +341,47 @@ local function configureLighting()
 		end
 	end
 	
-	-- Impostazioni generali Lighting per look tramonto caldo tridimensionale
-	Lighting.ClockTime = 16.8 -- Tardo pomeriggio / Tramonto dorato
+	-- Impostazioni generali Lighting per look pastello stilizzato (Stile Grow a Garden)
+	pcall(function()
+		-- La tecnologia a volte è protetta in scrittura o richiede Studio restart, ma proviamo ad assegnarla
+		(Lighting as any).Technology = Enum.Technology.ShadowMap
+	end)
+	Lighting.ClockTime = 14.5 -- Sole pomeridiano dorato alto ma angolato
 	Lighting.Brightness = 3.0
-	Lighting.Ambient = Color3.fromRGB(85, 80, 95)
-	Lighting.OutdoorAmbient = Color3.fromRGB(130, 115, 125)
+	Lighting.Ambient = Color3.fromRGB(110, 105, 125) -- Ombre violacee morbide
+	Lighting.OutdoorAmbient = Color3.fromRGB(135, 125, 140)
+	Lighting.ColorShift_Top = Color3.fromRGB(255, 245, 230) -- Luce solare calda
+	Lighting.ColorShift_Bottom = Color3.fromRGB(200, 210, 225) -- Luce riflessa azzurra
+	Lighting.ShadowSoftness = 0.1
 	
-	-- 1. Bloom Effect (Bagliore neon ed auree)
+	-- 1. Bloom Effect (Bagliore soffuso controllato)
 	local bloom = Instance.new("BloomEffect")
 	bloom.Name = "AutoBloom"
-	bloom.Size = 24
-	bloom.Intensity = 1.15
-	bloom.Threshold = 0.75
+	bloom.Size = 16
+	bloom.Intensity = 0.8
+	bloom.Threshold = 0.9
 	bloom.Parent = Lighting
 	
-	-- 2. Color Correction (Colori caldi e vivaci)
+	-- 2. Color Correction (Colori vivaci e caldi ma non bruciati)
 	local cc = Instance.new("ColorCorrectionEffect")
 	cc.Name = "AutoColorCorrection"
-	cc.Contrast = 0.12
-	cc.Saturation = 0.2
-	cc.TintColor = Color3.fromRGB(255, 248, 240) -- Calore solare
+	cc.Contrast = 0.05
+	cc.Saturation = 0.18
+	cc.TintColor = Color3.fromRGB(255, 252, 245) -- Filtro caldo pastello
 	cc.Parent = Lighting
 	
-	-- 3. Atmosphere (Nebbia di profondità stilizzata)
+	-- 3. Atmosphere (Nebbia stilizzata calda all'orizzonte)
 	local atmosphere = Instance.new("Atmosphere")
 	atmosphere.Name = "AutoAtmosphere"
-	atmosphere.Density = 0.12
+	atmosphere.Density = 0.1
 	atmosphere.Offset = 0.25
-	atmosphere.Color = Color3.fromRGB(180, 195, 210)
-	atmosphere.Decay = Color3.fromRGB(150, 100, 120) -- Orizzonte rosato tramonto
-	atmosphere.Glare = 0.25
-	atmosphere.Haze = 1.0
+	atmosphere.Color = Color3.fromRGB(190, 210, 225)
+	atmosphere.Decay = Color3.fromRGB(240, 180, 190) -- Orizzonte rosato pastello
+	atmosphere.Glare = 0.2
+	atmosphere.Haze = 0.5
 	atmosphere.Parent = Lighting
 	
-	-- 4. SunRays (Raggi solari volumetrici)
+	-- 4. SunRays (Raggi solari volumetrici diurni)
 	local sunRays = Instance.new("SunRaysEffect")
 	sunRays.Name = "AutoSunRays"
 	sunRays.Intensity = 0.15
@@ -347,45 +404,15 @@ end
 function MapService.init()
 	configureLighting()
 	
-	-- Ciclo Giorno/Notte Dinamico (con colori ambientali e bloom adattivi)
+	-- Ciclo di scorrimento ombre solari lento (oscilla lentamente tra le 13.8 e le 15.2 per ombre vive ma sempre soleggiate)
 	task.spawn(function()
 		local Lighting = game:GetService("Lighting")
-		local increment = 0.05 -- Velocità di scorrimento del tempo
-		
+		local cycle = 0
 		while true do
-			task.wait(0.6)
-			local newTime = (Lighting.ClockTime + increment) % 24
-			Lighting.ClockTime = newTime
-			
-			local isNight = (newTime < 6) or (newTime > 18)
-			local bloom = Lighting:FindFirstChild("AutoBloom") :: BloomEffect?
-			local cc = Lighting:FindFirstChild("AutoColorCorrection") :: ColorCorrectionEffect?
-			
-			if isNight then
-				Lighting.Ambient = Color3.fromRGB(30, 30, 50)
-				Lighting.OutdoorAmbient = Color3.fromRGB(40, 40, 60)
-				if bloom then
-					bloom.Intensity = 1.9
-					bloom.Threshold = 0.5
-				end
-				if cc then
-					cc.Contrast = 0.2
-					cc.Saturation = 0.3
-					cc.TintColor = Color3.fromRGB(220, 220, 255)
-				end
-			else
-				Lighting.Ambient = Color3.fromRGB(85, 80, 95)
-				Lighting.OutdoorAmbient = Color3.fromRGB(130, 115, 125)
-				if bloom then
-					bloom.Intensity = 1.15
-					bloom.Threshold = 0.75
-				end
-				if cc then
-					cc.Contrast = 0.12
-					cc.Saturation = 0.2
-					cc.TintColor = Color3.fromRGB(255, 248, 240)
-				end
-			end
+			task.wait(1.0)
+			cycle = cycle + 0.012
+			-- Oscilla sinusoidalmente l'orario del sole pomeridiano
+			Lighting.ClockTime = 14.5 + math.sin(cycle) * 0.7
 		end
 	end)
 	
