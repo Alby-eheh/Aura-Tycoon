@@ -821,26 +821,34 @@ slapStroke.Parent = slapBtn
 local lastSlapTime = 0
 local SLAP_COOLDOWN_CLIENT = 0.5
 
--- Esegue l'animazione di swing della spalla sul personaggio locale tramite Animator
+-- Esegue l'animazione di swing della spalla sul personaggio locale (Procedurale 100% compatibile)
 local function playSwingAnimation()
 	local char = player.Character
 	if not char then return end
-	local hum = char:FindFirstChildOfClass("Humanoid")
-	local animator = hum and hum:FindFirstChildOfClass("Animator")
-	if animator then
-		local rigType = hum.RigType
-		-- R15 utilizza un'animazione pugno nativa, R2/R6 utilizzano slash standard
-		local animId = rigType == Enum.HumanoidRigType.R15 and "rbxassetid://507295326" or "rbxassetid://12575065"
+	local shoulder = char:FindFirstChild("Right Shoulder", true) or char:FindFirstChild("RightShoulder", true)
+	if shoulder and shoulder:IsA("Motor6D") then
+		local initialC0 = shoulder.C0
+		local RunService = game:GetService("RunService")
+		local startTime = os.clock()
+		local duration = 0.3
 		
-		local anim = Instance.new("Animation")
-		anim.AnimationId = animId
-		
-		local success, track = pcall(function()
-			return animator:LoadAnimation(anim)
+		local connection
+		connection = RunService.PostSimulation:Connect(function()
+			if not shoulder or not shoulder.Parent then
+				connection:Disconnect()
+				return
+			end
+			local elapsed = os.clock() - startTime
+			if elapsed >= duration then
+				shoulder.C0 = initialC0
+				connection:Disconnect()
+				return
+			end
+			
+			local progress = elapsed / duration
+			local angle = math.sin(progress * math.pi) * 1.3 -- Swing fino a ~75 gradi
+			shoulder.C0 = initialC0 * CFrame.Angles(angle, 0, 0)
 		end)
-		if success and track then
-			track:Play()
-		end
 	end
 end
 
