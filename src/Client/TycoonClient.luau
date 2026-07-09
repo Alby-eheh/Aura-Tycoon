@@ -1,6 +1,6 @@
 --!strict
 -- TycoonClient.luau
--- Logica Client: GUI HUD procedurale (Glassmorphism), input mobile/PC, shop difensori e Camera Shake.
+-- Logica Client: HUD Glassmorphism, Shop Gacha, Corsa Ctrl, Combattimento PvP con Animator e Scambi P2P.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,7 +22,6 @@ end
 
 -- Attende che leaderstats sia caricato
 local leaderstats = player:WaitForChild("leaderstats") :: Folder
-
 local shecklesVal = leaderstats:WaitForChild("Sheckles") :: IntValue
 local generatorVal = leaderstats:WaitForChild("Generator") :: IntValue
 local storageVal = leaderstats:WaitForChild("Storage") :: IntValue
@@ -39,7 +38,7 @@ screenGui.Parent = PlayerGui
 -- ==========================================
 local hudFrame = Instance.new("Frame")
 hudFrame.Name = "HUDFrame"
-hudFrame.Size = UDim2.new(0, 220, 0, 210) -- Aumentato per far spazio al difensore
+hudFrame.Size = UDim2.new(0, 220, 0, 210)
 hudFrame.Position = UDim2.new(0, 20, 0.25, 0)
 hudFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 hudFrame.BackgroundTransparency = 0.35
@@ -65,7 +64,6 @@ hudTitle.TextSize = 16
 hudTitle.Font = Enum.Font.SourceSansBold
 hudTitle.Parent = hudFrame
 
--- Wallet Sheckles
 local walletLabel = Instance.new("TextLabel")
 walletLabel.Size = UDim2.new(1, -20, 0, 30)
 walletLabel.Position = UDim2.new(0, 10, 0, 40)
@@ -77,7 +75,6 @@ walletLabel.TextXAlignment = Enum.TextXAlignment.Left
 walletLabel.Font = Enum.Font.SourceSans
 walletLabel.Parent = hudFrame
 
--- Livello Generatore
 local genLabel = Instance.new("TextLabel")
 genLabel.Size = UDim2.new(1, -20, 0, 30)
 genLabel.Position = UDim2.new(0, 10, 0, 70)
@@ -89,7 +86,6 @@ genLabel.TextXAlignment = Enum.TextXAlignment.Left
 genLabel.Font = Enum.Font.SourceSans
 genLabel.Parent = hudFrame
 
--- Storage accumulato
 local storageLabel = Instance.new("TextLabel")
 storageLabel.Size = UDim2.new(1, -20, 0, 30)
 storageLabel.Position = UDim2.new(0, 10, 0, 100)
@@ -101,7 +97,6 @@ storageLabel.TextXAlignment = Enum.TextXAlignment.Left
 storageLabel.Font = Enum.Font.SourceSans
 storageLabel.Parent = hudFrame
 
--- Difensore Aura
 local defenderLabel = Instance.new("TextLabel")
 defenderLabel.Size = UDim2.new(1, -20, 0, 30)
 defenderLabel.Position = UDim2.new(0, 10, 0, 130)
@@ -113,67 +108,42 @@ defenderLabel.TextXAlignment = Enum.TextXAlignment.Left
 defenderLabel.Font = Enum.Font.SourceSans
 defenderLabel.Parent = hudFrame
 
--- Pulsante per aprire il Menu Centrale
 local openMenuBtn = Instance.new("TextButton")
 openMenuBtn.Size = UDim2.new(1, -20, 0, 30)
 openMenuBtn.Position = UDim2.new(0, 10, 0, 165)
 openMenuBtn.BackgroundColor3 = Color3.fromRGB(189, 0, 255)
-openMenuBtn.Text = "APRI SHOP & GACHA"
+openMenuBtn.Text = "MENU GIOCO / SCAMBI"
 openMenuBtn.TextColor3 = Color3.new(1, 1, 1)
 openMenuBtn.Font = Enum.Font.SourceSansBold
 openMenuBtn.TextSize = 14
 openMenuBtn.Parent = hudFrame
 
-local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(0, 6)
-btnCorner.Parent = openMenuBtn
+Instance.new("UICorner", openMenuBtn).CornerRadius = UDim.new(0, 6)
 
--- Aggiorna i valori in tempo reale legati agli IntValues
-shecklesVal.Changed:Connect(function(val)
-	walletLabel.Text = "Portafoglio: " .. val .. " $"
-end)
-generatorVal.Changed:Connect(function(val)
-	genLabel.Text = "Generatore: Lvl " .. val
-end)
-storageVal.Changed:Connect(function(val)
-	storageLabel.Text = "Cassa Lotto: " .. val .. " $"
-end)
-defenderVal.Changed:Connect(function(val)
-	defenderLabel.Text = "Difensore: " .. getDefenderName(val)
-end)
+shecklesVal.Changed:Connect(function(val) walletLabel.Text = "Portafoglio: " .. val .. " $" end)
+generatorVal.Changed:Connect(function(val) genLabel.Text = "Generatore: Lvl " .. val end)
+storageVal.Changed:Connect(function(val) storageLabel.Text = "Cassa Lotto: " .. val .. " $" end)
+defenderVal.Changed:Connect(function(val) defenderLabel.Text = "Difensore: " .. getDefenderName(val) end)
 
 
 -- ==========================================
--- 2. PANNELLO MENU PRINCIPALE (CENTRO)
+-- 2. PANNELLO MENU PRINCIPALE (CENTRO CON TABS)
 -- ==========================================
 local menuFrame = Instance.new("Frame")
 menuFrame.Name = "MenuFrame"
-menuFrame.Size = UDim2.new(0, 420, 0, 320)
-menuFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
+menuFrame.Size = UDim2.new(0, 440, 0, 340)
+menuFrame.Position = UDim2.new(0.5, -220, 0.5, -170)
 menuFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 20)
 menuFrame.BackgroundTransparency = 0.2
 menuFrame.Visible = false
 menuFrame.Parent = screenGui
 
-local menuCorner = Instance.new("UICorner")
-menuCorner.CornerRadius = UDim.new(0, 12)
-menuCorner.Parent = menuFrame
-
+Instance.new("UICorner", menuFrame).CornerRadius = UDim.new(0, 12)
 local menuStroke = Instance.new("UIStroke")
 menuStroke.Color = Color3.fromRGB(189, 0, 255)
 menuStroke.Thickness = 1.5
 menuStroke.Transparency = 0.4
 menuStroke.Parent = menuFrame
-
--- Titolo Menu
-local menuTitle = Instance.new("TextLabel")
-menuTitle.Size = UDim2.new(1, 0, 0, 40)
-menuTitle.BackgroundTransparency = 1
-menuTitle.Text = "SHOP COSMETICI & UNBOXING"
-menuTitle.TextColor3 = Color3.fromRGB(189, 0, 255)
-menuTitle.TextSize = 16
-menuTitle.Font = Enum.Font.SourceSansBold
-menuTitle.Parent = menuFrame
 
 -- Pulsante Chiudi
 local closeBtn = Instance.new("TextButton")
@@ -186,42 +156,97 @@ closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.TextSize = 18
 closeBtn.Parent = menuFrame
 
--- Bottone Gacha Unbox
+-- Navigation Tabs
+local tabShopBtn = Instance.new("TextButton")
+tabShopBtn.Size = UDim2.new(0, 180, 0, 35)
+tabShopBtn.Position = UDim2.new(0, 15, 0, 10)
+tabShopBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+tabShopBtn.Text = "SHOP & GACHA"
+tabShopBtn.TextColor3 = Color3.new(1, 1, 1)
+tabShopBtn.Font = Enum.Font.SourceSansBold
+tabShopBtn.TextSize = 13
+tabShopBtn.Parent = menuFrame
+Instance.new("UICorner", tabShopBtn).CornerRadius = UDim.new(0, 6)
+
+local tabTradeBtn = Instance.new("TextButton")
+tabTradeBtn.Size = UDim2.new(0, 180, 0, 35)
+tabTradeBtn.Position = UDim2.new(0, 205, 0, 10)
+tabTradeBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+tabTradeBtn.Text = "COMMERCIA (P2P)"
+tabTradeBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+tabTradeBtn.Font = Enum.Font.SourceSansBold
+tabTradeBtn.TextSize = 13
+tabTradeBtn.Parent = menuFrame
+Instance.new("UICorner", tabTradeBtn).CornerRadius = UDim.new(0, 6)
+
+-- CONTENITORE TAB SHOP
+local shopTabFrame = Instance.new("Frame")
+shopTabFrame.Size = UDim2.new(1, -20, 1, -60)
+shopTabFrame.Position = UDim2.new(0, 10, 0, 50)
+shopTabFrame.BackgroundTransparency = 1
+shopTabFrame.Parent = menuFrame
+
+-- CONTENITORE TAB TRADE
+local tradeTabFrame = Instance.new("Frame")
+tradeTabFrame.Size = UDim2.new(1, -20, 1, -60)
+tradeTabFrame.Position = UDim2.new(0, 10, 0, 50)
+tradeTabFrame.BackgroundTransparency = 1
+tradeTabFrame.Visible = false
+tradeTabFrame.Parent = menuFrame
+
+-- Switch Tabs Logic
+tabShopBtn.MouseButton1Click:Connect(function()
+	shopTabFrame.Visible = true
+	tradeTabFrame.Visible = false
+	tabShopBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+	tabShopBtn.TextColor3 = Color3.new(1, 1, 1)
+	tabTradeBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+	tabTradeBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+end)
+tabTradeBtn.MouseButton1Click:Connect(function()
+	shopTabFrame.Visible = false
+	tradeTabFrame.Visible = true
+	tabTradeBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+	tabTradeBtn.TextColor3 = Color3.new(1, 1, 1)
+	tabShopBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+	tabShopBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+end)
+
+-- ----------------------------------------------------
+-- ELEMENTI TAB SHOP (GACHA & UPGRADES)
+-- ----------------------------------------------------
 local gachaBtn = Instance.new("TextButton")
 gachaBtn.Size = UDim2.new(0, 180, 0, 40)
-gachaBtn.Position = UDim2.new(0, 20, 0, 60)
+gachaBtn.Position = UDim2.new(0, 10, 0, 20)
 gachaBtn.BackgroundColor3 = Color3.fromRGB(189, 0, 255)
 gachaBtn.Text = "ROLL GACHA (20 $)"
 gachaBtn.TextColor3 = Color3.new(1, 1, 1)
 gachaBtn.Font = Enum.Font.SourceSansBold
 gachaBtn.TextSize = 14
-gachaBtn.Parent = menuFrame
+gachaBtn.Parent = shopTabFrame
 Instance.new("UICorner", gachaBtn).CornerRadius = UDim.new(0, 6)
 
--- Risultato dello Sblocco
 local resultLabel = Instance.new("TextLabel")
 resultLabel.Size = UDim2.new(0, 180, 0, 30)
-resultLabel.Position = UDim2.new(0, 20, 0, 105)
+resultLabel.Position = UDim2.new(0, 10, 0, 65)
 resultLabel.BackgroundTransparency = 1
 resultLabel.Text = "Nessun roll effettuato"
 resultLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 resultLabel.TextSize = 13
 resultLabel.Font = Enum.Font.SourceSansItalic
-resultLabel.Parent = menuFrame
+resultLabel.Parent = shopTabFrame
 
--- Bottone Potenziamento Difensore (Shop in-game)
 local upgradeDefBtn = Instance.new("TextButton")
 upgradeDefBtn.Size = UDim2.new(0, 180, 0, 50)
-upgradeDefBtn.Position = UDim2.new(0, 20, 0, 150)
+upgradeDefBtn.Position = UDim2.new(0, 10, 0, 110)
 upgradeDefBtn.BackgroundColor3 = Color3.fromRGB(255, 196, 0)
 upgradeDefBtn.Text = "POTENZIA DIFENSORE\n(Costo: Incel 100 $)"
 upgradeDefBtn.TextColor3 = Color3.fromRGB(15, 15, 25)
 upgradeDefBtn.Font = Enum.Font.SourceSansBold
 upgradeDefBtn.TextSize = 13
-upgradeDefBtn.Parent = menuFrame
+upgradeDefBtn.Parent = shopTabFrame
 Instance.new("UICorner", upgradeDefBtn).CornerRadius = UDim.new(0, 6)
 
--- Aggiorna scritte sul bottone del difensore in base al livello attuale
 local function updateDefenderButtonText()
 	local currentTier = defenderVal.Value
 	if currentTier == 0 then
@@ -239,67 +264,34 @@ end
 defenderVal.Changed:Connect(updateDefenderButtonText)
 updateDefenderButtonText()
 
--- Gestore click bottone potenziamento difensore
-upgradeDefBtn.MouseButton1Click:Connect(function()
-	local TycoonService = ReplicatedStorage:FindFirstChild("GnomeTriggerRemote") -- usiamo un remote fittizio o chiamiamo touch
-	-- Per attivare l'upgrade in modo sicuro simuliamo il tocco o invochiamo il remote
-	-- Nota: nel nostro server abbiamo MapService che risponde alla collisione del pad. Possiamo anche esporre un remote
-	-- ma per semplicità la logica del pad fisico è pienamente attiva nel Workspace.
-	-- Per permettere l'upgrade via GUI, inviamo una richiesta tramite un RemoteEvent generico
-	-- oppure lo indichiamo al server. Esponiamo un pulsante fisico che risponde ma informiamo il giocatore:
-	upgradeDefBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	task.wait(0.15)
-	upgradeDefBtn.BackgroundColor3 = Color3.fromRGB(255, 196, 0)
-	
-	-- Avvia tocco virtuale sul server
-	local remote = ReplicatedStorage:FindFirstChild("GnomeTriggerRemote")
-	-- Il server intercetta l'upgrade se cammini sul pad, ma diamo supporto diretto tramite RemoteEvent
-	-- Nel nostro TycoonService abbiamo upgradeDefender(player) esposto. Lo colleghiamo a una chiamata remota
-	-- (nota: nel Main.server.luau abbiamo registrato GnomeTriggerRemote. Aggiungiamo un check o usiamo il pad fisico in 3D).
-end)
-
--- Sezione Lista Inventario (Destra)
 local listTitle = Instance.new("TextLabel")
 listTitle.Size = UDim2.new(0, 180, 0, 20)
-listTitle.Position = UDim2.new(0, 220, 0, 60)
+listTitle.Position = UDim2.new(0, 210, 0, 15)
 listTitle.BackgroundTransparency = 1
 listTitle.Text = "I tuoi Cosmetici:"
 listTitle.TextColor3 = Color3.new(1, 1, 1)
 listTitle.TextSize = 14
 listTitle.Font = Enum.Font.SourceSansBold
 listTitle.TextXAlignment = Enum.TextXAlignment.Left
-listTitle.Parent = menuFrame
+listTitle.Parent = shopTabFrame
 
 local inventoryScroll = Instance.new("ScrollingFrame")
-inventoryScroll.Size = UDim2.new(0, 180, 0, 180)
-inventoryScroll.Position = UDim2.new(0, 220, 0, 85)
+inventoryScroll.Size = UDim2.new(0, 190, 0, 200)
+inventoryScroll.Position = UDim2.new(0, 210, 0, 40)
 inventoryScroll.BackgroundTransparency = 0.8
 inventoryScroll.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 inventoryScroll.BorderSizePixel = 0
 inventoryScroll.CanvasSize = UDim2.new(0, 0, 2, 0)
-inventoryScroll.Parent = menuFrame
+inventoryScroll.Parent = shopTabFrame
 
 local uiListLayout = Instance.new("UIListLayout")
 uiListLayout.Padding = UDim.new(0, 5)
 uiListLayout.Parent = inventoryScroll
 
--- Interazione per visualizzare/chiudere il menu
-openMenuBtn.MouseButton1Click:Connect(function()
-	menuFrame.Visible = not menuFrame.Visible
-end)
-closeBtn.MouseButton1Click:Connect(function()
-	menuFrame.Visible = false
-end)
-
--- Funzione per rinfrescare l'inventario grafico
 local function refreshInventoryUI()
-	-- Pulisci lista precedente
 	for _, child in ipairs(inventoryScroll:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
+		if child:IsA("TextButton") then child:Destroy() end
 	end
-	
 	local inventory = player:GetAttribute("Inventory") or ""
 	if inventory == "" then
 		local empty = Instance.new("TextButton")
@@ -312,8 +304,6 @@ local function refreshInventoryUI()
 		empty.Parent = inventoryScroll
 		return
 	end
-	
-	-- Popola gli elementi
 	local items = string.split(inventory, ",")
 	for _, itemName in ipairs(items) do
 		if itemName == "" then continue end
@@ -328,11 +318,8 @@ local function refreshInventoryUI()
 		Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
 		
 		itemBtn.MouseButton1Click:Connect(function()
-			-- Equipaggia l'oggetto sul server
 			local equipCosmeticRemote = ReplicatedStorage:WaitForChild("EquipCosmeticRemote") :: RemoteEvent
 			equipCosmeticRemote:FireServer(itemName)
-			
-			-- Segnala equipaggiamento visivo locale
 			itemBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 			task.wait(0.2)
 			itemBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
@@ -340,29 +327,18 @@ local function refreshInventoryUI()
 	end
 end
 
--- Gestione del Bottone di Roll Gacha
 gachaBtn.MouseButton1Click:Connect(function()
 	if not gachaBtn.Active then return end
 	gachaBtn.Active = false
-	
 	local initialText = gachaBtn.Text
 	local initialPosition = gachaBtn.Position
 	local initialColor = gachaBtn.BackgroundColor3
 	
-	-- 1. Avvia animazione di tremolio (Shake) e flash neon
 	task.spawn(function()
 		local endTime = os.clock() + 1.2
 		while os.clock() < endTime do
-			local offsetX = math.random(-6, 6)
-			local offsetY = math.random(-4, 4)
-			gachaBtn.Position = initialPosition + UDim2.new(0, offsetX, 0, offsetY)
-			
-			-- Flashing neon colors
-			local r = math.random(120, 255)
-			local g = math.random(0, 80)
-			local b = math.random(180, 255)
-			gachaBtn.BackgroundColor3 = Color3.fromRGB(r, g, b)
-			
+			gachaBtn.Position = initialPosition + UDim2.new(0, math.random(-6, 6), 0, math.random(-4, 4))
+			gachaBtn.BackgroundColor3 = Color3.fromRGB(math.random(120, 255), math.random(0, 80), math.random(180, 255))
 			task.wait(0.04)
 		end
 		gachaBtn.Position = initialPosition
@@ -374,52 +350,299 @@ gachaBtn.MouseButton1Click:Connect(function()
 	resultLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 	resultLabel.TextSize = 13
 	
-	-- 2. Invocazione server sincrona con cooldown minimo
 	local startTime = os.clock()
 	local openGachaRemote = ReplicatedStorage:WaitForChild("OpenGachaRemote") :: RemoteFunction
 	local result = openGachaRemote:InvokeServer()
 	
 	local elapsed = os.clock() - startTime
-	if elapsed < 1.2 then
-		task.wait(1.2 - elapsed) -- Attendi fine dell'animazione di shake
-	end
+	if elapsed < 1.2 then task.wait(1.2 - elapsed) end
 	
-	-- Riavvia bottoni
 	gachaBtn.Active = true
 	gachaBtn.Text = initialText
 	
-	-- 3. Rivelazione cosmetico con dissolvenza ed esplosione di testo (Tween)
 	if result and result.Success then
 		resultLabel.Text = "Sbloccato: " .. result.Item
 		resultLabel.TextColor3 = result.Rarity == "legendary" and Color3.fromRGB(255, 196, 0) or 
 		                         result.Rarity == "rare" and Color3.fromRGB(0, 240, 255) or Color3.fromRGB(200, 200, 200)
-		
 		resultLabel.TextTransparency = 1
 		resultLabel.TextSize = 22
-		
-		local tween = TweenService:Create(resultLabel, TweenInfo.new(0.4, Enum.EasingStyle.BackOut), {
-			TextTransparency = 0,
-			TextSize = 14
-		})
-		tween:Play()
-		
+		TweenService:Create(resultLabel, TweenInfo.new(0.4, Enum.EasingStyle.BackOut), {TextTransparency = 0, TextSize = 14}):Play()
 		player:SetAttribute("Inventory", result.Inventory)
 		refreshInventoryUI()
 	else
 		resultLabel.Text = result and result.Error or "Errore di connessione"
 		resultLabel.TextColor3 = Color3.fromRGB(255, 0, 85)
-		
 		resultLabel.TextTransparency = 1
-		local tween = TweenService:Create(resultLabel, TweenInfo.new(0.3, Enum.EasingStyle.QuadOut), {
-			TextTransparency = 0
-		})
-		tween:Play()
+		TweenService:Create(resultLabel, TweenInfo.new(0.3, Enum.EasingStyle.QuadOut), {TextTransparency = 0}):Play()
 	end
 end)
 
--- Sincronizza l'inventario all'apertura del menu
 player:GetAttributeChangedSignal("Inventory"):Connect(refreshInventoryUI)
 refreshInventoryUI()
+
+
+-- ----------------------------------------------------
+-- ELEMENTI TAB SCAMBI (P2P TRADING)
+-- ----------------------------------------------------
+local tradeTitle = Instance.new("TextLabel")
+tradeTitle.Size = UDim2.new(0, 200, 0, 20)
+tradeTitle.Position = UDim2.new(0, 10, 0, 10)
+tradeTitle.BackgroundTransparency = 1
+tradeTitle.Text = "Giocatori nel Server:"
+tradeTitle.TextColor3 = Color3.new(1, 1, 1)
+tradeTitle.TextSize = 14
+tradeTitle.Font = Enum.Font.SourceSansBold
+tradeTitle.TextXAlignment = Enum.TextXAlignment.Left
+tradeTitle.Parent = tradeTabFrame
+
+local playersScroll = Instance.new("ScrollingFrame")
+playersScroll.Size = UDim2.new(0, 190, 0, 210)
+playersScroll.Position = UDim2.new(0, 10, 0, 35)
+playersScroll.BackgroundTransparency = 0.8
+playersScroll.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+playersScroll.BorderSizePixel = 0
+playersScroll.Parent = tradeTabFrame
+Instance.new("UIListLayout", playersScroll).Padding = UDim.new(0, 5)
+
+-- Interfaccia di negoziazione attiva
+local activeTradePanel = Instance.new("Frame")
+activeTradePanel.Size = UDim2.new(0, 190, 0, 210)
+activeTradePanel.Position = UDim2.new(0, 210, 0, 35)
+activeTradePanel.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+activeTradePanel.BackgroundTransparency = 0.5
+activeTradePanel.Visible = false
+activeTradePanel.Parent = tradeTabFrame
+Instance.new("UICorner", activeTradePanel).CornerRadius = UDim.new(0, 8)
+
+local activeTradeTitle = Instance.new("TextLabel")
+activeTradeTitle.Size = UDim2.new(1, 0, 0, 30)
+activeTradeTitle.BackgroundTransparency = 1
+activeTradeTitle.Text = "Trattativa Attiva"
+activeTradeTitle.TextColor3 = Color3.fromRGB(0, 240, 255)
+activeTradeTitle.TextSize = 13
+activeTradeTitle.Font = Enum.Font.SourceSansBold
+activeTradeTitle.Parent = activeTradePanel
+
+local selectedAuraLabel = Instance.new("TextLabel")
+selectedAuraLabel.Size = UDim2.new(1, -20, 0, 30)
+selectedAuraLabel.Position = UDim2.new(0, 10, 0, 35)
+selectedAuraLabel.BackgroundTransparency = 1
+selectedAuraLabel.Text = "Tua Offerta: Seleziona..."
+selectedAuraLabel.TextColor3 = Color3.new(1, 1, 1)
+selectedAuraLabel.TextSize = 11
+selectedAuraLabel.Font = Enum.Font.SourceSans
+selectedAuraLabel.Parent = activeTradePanel
+
+local partnerOfferLabel = Instance.new("TextLabel")
+partnerOfferLabel.Size = UDim2.new(1, -20, 0, 30)
+partnerOfferLabel.Position = UDim2.new(0, 10, 0, 65)
+partnerOfferLabel.BackgroundTransparency = 1
+partnerOfferLabel.Text = "Offerta Partner: In attesa..."
+partnerOfferLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+partnerOfferLabel.TextSize = 11
+partnerOfferLabel.Font = Enum.Font.SourceSansItalic
+partnerOfferLabel.Parent = activeTradePanel
+
+local selectAuraBtn = Instance.new("TextButton")
+selectAuraBtn.Size = UDim2.new(1, -20, 0, 30)
+selectAuraBtn.Position = UDim2.new(0, 10, 0, 105)
+selectAuraBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+selectAuraBtn.Text = "SCEGLI DALL'INV"
+selectAuraBtn.TextColor3 = Color3.new(1, 1, 1)
+selectAuraBtn.Font = Enum.Font.SourceSansBold
+selectAuraBtn.TextSize = 11
+selectAuraBtn.Parent = activeTradePanel
+Instance.new("UICorner", selectAuraBtn).CornerRadius = UDim.new(0, 4)
+
+local acceptTradeBtn = Instance.new("TextButton")
+acceptTradeBtn.Size = UDim2.new(1, -20, 0, 35)
+acceptTradeBtn.Position = UDim2.new(0, 10, 0, 150)
+acceptTradeBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+acceptTradeBtn.Text = "CONFERMA SCAMBIO"
+acceptTradeBtn.TextColor3 = Color3.new(1, 1, 1)
+acceptTradeBtn.Font = Enum.Font.SourceSansBold
+acceptTradeBtn.TextSize = 12
+acceptTradeBtn.Parent = activeTradePanel
+Instance.new("UICorner", acceptTradeBtn).CornerRadius = UDim.new(0, 6)
+
+local currentTradeOffer = ""
+
+-- Rinfresca la lista dei giocatori commerciabili
+local function refreshPlayersList()
+	for _, child in ipairs(playersScroll:GetChildren()) do
+		if child:IsA("TextButton") then child:Destroy() end
+	end
+	
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p == player then continue end
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(1, -10, 0, 32)
+		btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+		btn.Text = "Scambia con: " .. p.Name
+		btn.TextColor3 = Color3.new(1, 1, 1)
+		btn.Font = Enum.Font.SourceSansBold
+		btn.TextSize = 12
+		btn.Parent = playersScroll
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+		
+		btn.MouseButton1Click:Connect(function()
+			-- Invia invito di scambio via server
+			local tradeInviteRemote = ReplicatedStorage:WaitForChild("TradeInviteRemote") :: RemoteEvent
+			tradeInviteRemote:FireServer(p)
+			btn.Text = "INVITO INVIATO!"
+			btn.BackgroundColor3 = Color3.fromRGB(189, 0, 255)
+			
+			activeTradePanel.Visible = true
+			selectedAuraLabel.Text = "Tua Offerta: Vuota/Seleziona..."
+			partnerOfferLabel.Text = "Offerta Partner: In attesa..."
+			currentTradeOffer = ""
+		end)
+	end
+end
+tabTradeBtn.MouseButton1Click:Connect(refreshPlayersList)
+refreshPlayersList()
+
+-- Selettore Aura per Scambio
+selectAuraBtn.MouseButton1Click:Connect(function()
+	-- Prende la prima aura nell'inventario per lo scambio rapido di test
+	local inventory = player:GetAttribute("Inventory") or ""
+	local items = string.split(inventory, ",")
+	for _, item in ipairs(items) do
+		if item ~= "" then
+			currentTradeOffer = item
+			selectedAuraLabel.Text = "Tua Offerta: " .. item
+			break
+		end
+	end
+	if currentTradeOffer == "" then
+		selectedAuraLabel.Text = "Nessuna aura da offrire!"
+	end
+end)
+
+-- Invia conferma dello scambio
+acceptTradeBtn.MouseButton1Click:Connect(function()
+	local tradeConfirmRemote = ReplicatedStorage:WaitForChild("TradeConfirmRemote") :: RemoteFunction
+	acceptTradeBtn.Text = "CONFERMATO! ATTENDO..."
+	acceptTradeBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+	
+	local result = tradeConfirmRemote:InvokeServer("Confirm", currentTradeOffer)
+	
+	if result and result.Success then
+		if result.Status == "Completed" then
+			acceptTradeBtn.Text = "CONFERMA SCAMBIO"
+			acceptTradeBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+			activeTradePanel.Visible = false
+			player:SetAttribute("Inventory", result.NewInventory)
+			refreshInventoryUI()
+			
+			-- Mostra notifica di successo
+			local popup = Instance.new("Frame")
+			popup.Size = UDim2.new(0, 200, 0, 50)
+			popup.Position = UDim2.new(0.5, -100, 0.4, 0)
+			popup.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+			popup.Parent = screenGui
+			Instance.new("UICorner", popup)
+			
+			local l = Instance.new("TextLabel")
+			l.Size = UDim2.new(1,0,1,0)
+			l.Text = "SCAMBIO COMPLETATO!"
+			l.TextColor3 = Color3.new(1,1,1)
+			l.Font = Enum.Font.SourceSansBold
+			l.BackgroundTransparency = 1
+			l.Parent = popup
+			task.delay(3, function() popup:Destroy() end)
+		end
+	else
+		acceptTradeBtn.Text = "ERRORE SCAMBIO"
+		acceptTradeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 85)
+		task.wait(1.5)
+		acceptTradeBtn.Text = "CONFERMA SCAMBIO"
+		acceptTradeBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+	end
+end)
+
+-- Gestione inviti entranti da altri player
+local tradeInviteRemote = ReplicatedStorage:WaitForChild("TradeInviteRemote") :: RemoteEvent
+tradeInviteRemote.OnClientEvent:Connect(function(partnerPlayer, status, extraData)
+	if status == "Success" then
+		-- Scambio completato, chiudi e rinfresca
+		activeTradePanel.Visible = false
+		refreshInventoryUI()
+		return
+	end
+	
+	if status == "Confirmed" then
+		-- Partner ha offerto qualcosa
+		partnerOfferLabel.Text = "Offerta Partner: " .. (extraData or "Vuota")
+		partnerOfferLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+		return
+	end
+	
+	if partnerPlayer == nil then
+		-- Chiusura/annullamento scambio
+		activeTradePanel.Visible = false
+		acceptTradeBtn.Text = "CONFERMA SCAMBIO"
+		acceptTradeBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		return
+	end
+	
+	-- Invito di scambio ricevuto
+	local invitePanel = Instance.new("Frame")
+	invitePanel.Size = UDim2.new(0, 260, 0, 100)
+	invitePanel.Position = UDim2.new(0.5, -130, 0.4, 0)
+	invitePanel.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	invitePanel.Parent = screenGui
+	Instance.new("UICorner", invitePanel)
+	
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 40)
+	title.Text = "Scambio da " .. partnerPlayer.Name .. "?\nVuoi commerciare?"
+	title.TextColor3 = Color3.new(1, 1, 1)
+	title.Font = Enum.Font.SourceSansBold
+	title.BackgroundTransparency = 1
+	title.TextSize = 13
+	title.Parent = invitePanel
+	
+	local acceptBtn = Instance.new("TextButton")
+	acceptBtn.Size = UDim2.new(0, 100, 0, 30)
+	acceptBtn.Position = UDim2.new(0, 20, 0, 55)
+	acceptBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+	acceptBtn.Text = "ACCETTA"
+	acceptBtn.TextColor3 = Color3.new(1,1,1)
+	acceptBtn.Font = Enum.Font.SourceSansBold
+	acceptBtn.Parent = invitePanel
+	Instance.new("UICorner", acceptBtn)
+	
+	local declineBtn = Instance.new("TextButton")
+	declineBtn.Size = UDim2.new(0, 100, 0, 30)
+	declineBtn.Position = UDim2.new(0, 140, 0, 55)
+	declineBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 85)
+	declineBtn.Text = "DECLINA"
+	declineBtn.TextColor3 = Color3.new(1,1,1)
+	declineBtn.Font = Enum.Font.SourceSansBold
+	declineBtn.Parent = invitePanel
+	Instance.new("UICorner", declineBtn)
+	
+	acceptBtn.MouseButton1Click:Connect(function()
+		invitePanel:Destroy()
+		-- Accetta sul server (simula rispondendo con invito reciproco)
+		tradeInviteRemote:FireServer(partnerPlayer)
+		
+		-- Apri pannello commerci
+		menuFrame.Visible = true
+		tabTradeBtn:Click() -- Simula il click
+		activeTradePanel.Visible = true
+		selectedAuraLabel.Text = "Tua Offerta: Vuota/Seleziona..."
+		partnerOfferLabel.Text = "Offerta Partner: In attesa..."
+		currentTradeOffer = ""
+	end)
+	
+	declineBtn.MouseButton1Click:Connect(function()
+		invitePanel:Destroy()
+		local tradeConfirmRemoteObj = ReplicatedStorage:WaitForChild("TradeConfirmRemote") :: RemoteFunction
+		tradeConfirmRemoteObj:InvokeServer("Decline", "")
+	end)
+end)
 
 
 -- ==========================================
@@ -468,7 +691,6 @@ local function setSprintActive(active: boolean)
 	end
 end
 
--- Gestione tastiera (Ctrl)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
@@ -482,18 +704,9 @@ UserInputService.InputEnded:Connect(function(input, gameProcessed)
 	end
 end)
 
--- Gestione touch/mouse sul bottone
-sprintBtn.MouseButton1Down:Connect(function()
-	setSprintActive(true)
-end)
-
-sprintBtn.MouseButton1Up:Connect(function()
-	setSprintActive(false)
-end)
-
-sprintBtn.MouseLeave:Connect(function()
-	setSprintActive(false)
-end)
+sprintBtn.MouseButton1Down:Connect(function() setSprintActive(true) end)
+sprintBtn.MouseButton1Up:Connect(function() setSprintActive(false) end)
+sprintBtn.MouseLeave:Connect(function() setSprintActive(false) end)
 
 
 -- ==========================================
@@ -504,7 +717,6 @@ GnomeTriggerRemote.OnClientEvent:Connect(function(attacker, defenderTier)
 	local tier = defenderTier or 1
 	print("[Client] Knockback da difensore Tier " .. tier .. "! Avvio camera shake...")
 	
-	-- Calcola parametri basati sulla forza del difensore
 	local shakeIntensity = 0.2
 	local shakeDuration = 0.4
 	local velocityVec = Vector3.new(0, 50, -35)
@@ -518,7 +730,7 @@ GnomeTriggerRemote.OnClientEvent:Connect(function(attacker, defenderTier)
 		shakeDuration = 0.65
 		velocityVec = Vector3.new(0, 110, -90)
 	elseif tier == 4 then
-		shakeIntensity = 1.4 -- Molto intenso per Aura CEO!
+		shakeIntensity = 1.4
 		shakeDuration = 0.95
 		velocityVec = Vector3.new(0, 160, -145)
 	end
@@ -543,7 +755,6 @@ GnomeTriggerRemote.OnClientEvent:Connect(function(attacker, defenderTier)
 		end)
 	end
 	
-	-- Movimento fisico all'indietro gestito via Velocity sul client
 	local character = player.Character
 	if character then
 		local hrp = character:WaitForChild("HumanoidRootPart")
@@ -558,19 +769,15 @@ GnomeTriggerRemote.OnClientEvent:Connect(function(attacker, defenderTier)
 	end
 end)
 
--- Moments API Trigger locale (simula pop-up in-game)
+-- Moments API Trigger locale
 local promptMomentRemote = ReplicatedStorage:WaitForChild("PromptMomentCapture")
 promptMomentRemote.OnClientEvent:Connect(function(actionType, score)
-	-- Mostra notifica momentanea a schermo
 	local popup = Instance.new("Frame")
 	popup.Size = UDim2.new(0, 300, 0, 60)
 	popup.Position = UDim2.new(0.5, -150, 0.8, 0)
 	popup.BackgroundColor3 = Color3.fromRGB(0, 240, 255)
 	popup.Parent = screenGui
-	
-	local popupCorner = Instance.new("UICorner")
-	popupCorner.CornerRadius = UDim.new(0, 8)
-	popupCorner.Parent = popup
+	Instance.new("UICorner", popup).CornerRadius = UDim.new(0, 8)
 
 	local popupLabel = Instance.new("TextLabel")
 	popupLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -581,18 +788,18 @@ promptMomentRemote.OnClientEvent:Connect(function(actionType, score)
 	popupLabel.TextSize = 14
 	popupLabel.Parent = popup
 	
-	-- Chiudi dopo 4 secondi con una transizione fittizia
 	task.wait(4)
 	popup:Destroy()
 end)
 
+
 -- ==========================================
--- 5. LOGICA DI COMBATTIMENTO PVP (SCHIAFFO LOCAL FX & REMOTE)
+-- 5. LOGICA DI COMBATTIMENTO PVP (SCHIAFFO CON ANIMATOR)
 -- ==========================================
 local slapBtn = Instance.new("TextButton")
 slapBtn.Name = "SlapButton"
 slapBtn.Size = UDim2.new(0, 60, 0, 60)
-slapBtn.Position = UDim2.new(0.85, -20, 0.75, -90) -- Sopra il tasto Sprint RUN
+slapBtn.Position = UDim2.new(0.85, -20, 0.75, -90)
 slapBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 85)
 slapBtn.BackgroundTransparency = 0.4
 slapBtn.Text = "SLAP"
@@ -614,26 +821,26 @@ slapStroke.Parent = slapBtn
 local lastSlapTime = 0
 local SLAP_COOLDOWN_CLIENT = 0.5
 
--- Esegue l'animazione di swing della spalla sul personaggio locale
+-- Esegue l'animazione di swing della spalla sul personaggio locale tramite Animator
 local function playSwingAnimation()
 	local char = player.Character
 	if not char then return end
-	local shoulder = char:FindFirstChild("Right Shoulder", true) or char:FindFirstChild("RightShoulder", true)
-	if shoulder and shoulder:IsA("Motor6D") then
-		local initialC0 = shoulder.C0
-		task.spawn(function()
-			-- Swing avanti
-			for i = 1, 5 do
-				shoulder.C0 = shoulder.C0 * CFrame.Angles(0.25, 0, 0)
-				task.wait(0.02)
-			end
-			-- Ritorno indietro
-			for i = 1, 5 do
-				shoulder.C0 = shoulder.C0 * CFrame.Angles(-0.25, 0, 0)
-				task.wait(0.02)
-			end
-			shoulder.C0 = initialC0
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	local animator = hum and hum:FindFirstChildOfClass("Animator")
+	if animator then
+		local rigType = hum.RigType
+		-- R15 utilizza un'animazione pugno nativa, R2/R6 utilizzano slash standard
+		local animId = rigType == Enum.HumanoidRigType.R15 and "rbxassetid://507295326" or "rbxassetid://12575065"
+		
+		local anim = Instance.new("Animation")
+		anim.AnimationId = animId
+		
+		local success, track = pcall(function()
+			return animator:LoadAnimation(anim)
 		end)
+		if success and track then
+			track:Play()
+		end
 	end
 end
 
@@ -642,16 +849,13 @@ local function triggerSlapAttack()
 	if nowTime - lastSlapTime < SLAP_COOLDOWN_CLIENT then return end
 	lastSlapTime = nowTime
 	
-	-- Animazione visiva locale
 	playSwingAnimation()
 	
-	-- Esegue il RemoteEvent al server
 	local slapSwingRemote = ReplicatedStorage:FindFirstChild("SlapSwingRemote") :: RemoteEvent
 	if slapSwingRemote then
 		slapSwingRemote:FireServer()
 	end
 	
-	-- Piccolo feedback visivo sul bottone
 	slapBtn.BackgroundTransparency = 0.15
 	task.spawn(function()
 		task.wait(0.15)
@@ -659,7 +863,6 @@ local function triggerSlapAttack()
 	end)
 end
 
--- Input da tastiera (Tasto sinistro Mouse)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -667,7 +870,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	end
 end)
 
--- Click/Touch sul bottone a schermo
 slapBtn.MouseButton1Click:Connect(triggerSlapAttack)
 
 return {}

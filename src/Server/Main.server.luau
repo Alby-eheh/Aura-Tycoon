@@ -40,6 +40,8 @@ ensureRemoteEvent("ShowSystemAlert")
 ensureRemoteFunction("OpenGachaRemote")
 ensureRemoteEvent("EquipCosmeticRemote")
 ensureRemoteEvent("SlapSwingRemote")
+ensureRemoteEvent("TradeInviteRemote")
+ensureRemoteFunction("TradeConfirmRemote")
 
 local TycoonService = require(ServerScriptService:WaitForChild("TycoonService"))
 local RaidService = require(ServerScriptService:WaitForChild("RaidService"))
@@ -48,6 +50,7 @@ local MonetizationService = require(ServerScriptService:WaitForChild("Monetizati
 local MapService = require(ServerScriptService:WaitForChild("MapService"))
 local GachaService = require(ServerScriptService:WaitForChild("GachaService"))
 local CombatService = require(ServerScriptService:WaitForChild("CombatService"))
+local TradingService = require(ServerScriptService:WaitForChild("TradingService"))
 
 -- 1. Inizializzazione Servizi
 MonetizationService.init()
@@ -55,6 +58,7 @@ ServerRestartService.init()
 MapService.init()
 GachaService.init()
 CombatService.init()
+TradingService.init()
 
 -- 2. Hook per PlayerAdded/PlayerRemoving per caricare/scaricare i dati
 Players.PlayerAdded:Connect(function(player)

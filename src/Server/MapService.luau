@@ -1,6 +1,6 @@
 --!strict
 -- MapService.luau
--- Generatore procedurale di lotti, pulsanti fisici, audio spaziale, particelle e tabellone centrale 3D.
+-- Generatore procedurale di lotti, pulsanti fisici, audio spaziale, particelle e tabelloni 3D (Moments & Classifica Ricchi).
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -31,9 +31,10 @@ local BOING_SOUND_ID = "rbxassetid://12221946"
 local activePlots = {} -- Mappa PlotNumber -> { Owner: Player, PlotPart: Part, GnomePart: Part? }
 local debounces = {} -- Mappa Player -> boolean
 
--- Riferimenti ai TextLabel del tabellone centrale per gli aggiornamenti a caldo
+-- Riferimenti ai TextLabel per aggiornamenti in tempo reale
 local momentsLabelFront: TextLabel? = nil
 local momentsLabelBack: TextLabel? = nil
+local richLeaderboardLabel: TextLabel? = nil
 
 -- Crea un'etichetta 3D fluttuante (BillboardGui) per i pad
 local function createFloatingLabel(parent: Part, text: string, color: Color3)
@@ -279,40 +280,41 @@ local function releasePlot(player: Player)
 	end
 end
 
--- Inizializza i lotti e crea il Tabellone Moments 3D centrale
+-- Inizializza lotti, Moments Billboard e Classifica Ricchi 3D
 function MapService.init()
 	mapFolder = Instance.new("Folder")
 	mapFolder.Name = "HostileTycoonMap"
 	mapFolder.Parent = Workspace
 	
-	print("[MapService] Generazione procedurale dei lotti e del monumento centrale...")
+	print("[MapService] Generazione procedurale dei lotti e delle strutture centrali...")
 	
 	-- Genera i 4 lotti
 	for i = 1, 4 do
 		generatePlot(i)
 	end
 	
-	-- 1. Genera pilastro del tabellone centrale
+	-- ----------------------------------------------------
+	-- 1. TABELLONE MOMENTS CENTRALE
+	-- ----------------------------------------------------
 	local pillar = Instance.new("Part")
 	pillar.Name = "BillboardPillar"
 	pillar.Size = Vector3.new(4, 15, 4)
-	pillar.Position = Vector3.new(0, 7.5, 0)
+	pillar.Position = Vector3.new(0, 7.5, 10)
 	pillar.Color = Color3.fromRGB(60, 60, 70)
 	pillar.Material = Enum.Material.Concrete
 	pillar.Anchored = true
 	pillar.Parent = mapFolder
 
-	-- 2. Genera pannello schermo del tabellone
 	local display = Instance.new("Part")
 	display.Name = "BillboardDisplay"
 	display.Size = Vector3.new(26, 11, 1.2)
-	display.Position = Vector3.new(0, 16.5, 0)
+	display.Position = Vector3.new(0, 16.5, 10)
 	display.Color = Color3.fromRGB(15, 15, 25)
 	display.Material = Enum.Material.SmoothPlastic
 	display.Anchored = true
 	display.Parent = mapFolder
 
-	-- 3. SurfaceGui sul FRONTE dello schermo
+	-- SurfaceGui sul FRONTE
 	local sgFront = Instance.new("SurfaceGui")
 	sgFront.Name = "FeedFront"
 	sgFront.Face = Enum.NormalId.Front
@@ -323,14 +325,14 @@ function MapService.init()
 	textFront.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 	textFront.BackgroundTransparency = 0.05
 	textFront.Text = "\n★ LIVE FEED MOMENTS ★\n\nNessun raid registrato per ora."
-	textFront.TextColor3 = Color3.fromRGB(0, 240, 255)
+	textFront.TextColor3 = Color3.fromRGB(255, 0, 150) -- Fucsia
 	textFront.TextSize = 20
 	textFront.Font = Enum.Font.SourceSansBold
 	textFront.TextWrapped = true
 	textFront.Parent = sgFront
 	momentsLabelFront = textFront
 
-	-- 4. SurfaceGui sul RETRO dello schermo
+	-- SurfaceGui sul RETRO
 	local sgBack = Instance.new("SurfaceGui")
 	sgBack.Name = "FeedBack"
 	sgBack.Face = Enum.NormalId.Back
@@ -341,12 +343,95 @@ function MapService.init()
 	textBack.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 	textBack.BackgroundTransparency = 0.05
 	textBack.Text = "\n★ LIVE FEED MOMENTS ★\n\nNessun raid registrato per ora."
-	textBack.TextColor3 = Color3.fromRGB(0, 240, 255)
+	textBack.TextColor3 = Color3.fromRGB(255, 0, 150)
 	textBack.TextSize = 20
 	textBack.Font = Enum.Font.SourceSansBold
 	textBack.TextWrapped = true
 	textBack.Parent = sgBack
 	momentsLabelBack = textBack
+
+	-- ----------------------------------------------------
+	-- 2. TABELLONE CLASSIFICA RICCHI 3D
+	-- ----------------------------------------------------
+	local richPillar = Instance.new("Part")
+	richPillar.Name = "RichPillar"
+	richPillar.Size = Vector3.new(3, 14, 3)
+	richPillar.Position = Vector3.new(-30, 7, -10)
+	richPillar.Color = Color3.fromRGB(50, 50, 55)
+	richPillar.Material = Enum.Material.Concrete
+	richPillar.Anchored = true
+	richPillar.Parent = mapFolder
+
+	local richDisplay = Instance.new("Part")
+	richDisplay.Name = "RichDisplay"
+	richDisplay.Size = Vector3.new(18, 10, 1.2)
+	richDisplay.Position = Vector3.new(-30, 15.5, -10)
+	richDisplay.Color = Color3.fromRGB(15, 20, 15) -- Vetro scuro verdastro
+	richDisplay.Material = Enum.Material.SmoothPlastic
+	richDisplay.Anchored = true
+	richDisplay.Parent = mapFolder
+
+	local sgRich = Instance.new("SurfaceGui")
+	sgRich.Name = "RichGui"
+	sgRich.Face = Enum.NormalId.Front
+	sgRich.Parent = richDisplay
+
+	local textRich = Instance.new("TextLabel")
+	textRich.Size = UDim2.new(1, 0, 1, 0)
+	textRich.BackgroundColor3 = Color3.fromRGB(10, 20, 15)
+	textRich.BackgroundTransparency = 0.05
+	textRich.Text = "\n★ CLASSIFICA RICCHI ★\n\nCalcolo in corso..."
+	textRich.TextColor3 = Color3.fromRGB(0, 255, 100) -- Verde neon
+	textRich.TextSize = 18
+	textRich.Font = Enum.Font.SourceSansBold
+	textRich.TextWrapped = true
+	textRich.Parent = sgRich
+	richLeaderboardLabel = textRich
+
+	-- 3. Ciclo di aggiornamento classifica Ricchi sul server (ogni 10 secondi)
+	task.spawn(function()
+		while true do
+			task.wait(10.0)
+			local pList = Players:GetPlayers()
+			
+			-- Ordina i player in base ai Sheckles
+			table.sort(pList, function(a, b)
+				local aCoins = 0
+				local bCoins = 0
+				local aStats = a:FindFirstChild("leaderstats")
+				local bStats = b:FindFirstChild("leaderstats")
+				if aStats then
+					local val = aStats:FindFirstChild("Sheckles")
+					if val and val:IsA("IntValue") then aCoins = val.Value end
+				end
+				if bStats then
+					local val = bStats:FindFirstChild("Sheckles")
+					if val and val:IsA("IntValue") then bCoins = val.Value end
+				end
+				return aCoins > bCoins
+			end)
+			
+			local text = "\n★ TOP RICH PLAYERS ★\n"
+			for rank, p in ipairs(pList) do
+				if rank > 5 then break end
+				local coins = 0
+				local stats = p:FindFirstChild("leaderstats")
+				if stats then
+					local val = stats:FindFirstChild("Sheckles")
+					if val and val:IsA("IntValue") then coins = val.Value end
+				end
+				text = text .. "\n#" .. rank .. " " .. p.Name .. " - " .. coins .. " $"
+			end
+			
+			if #pList == 0 then
+				text = text .. "\nNessun player attivo."
+			end
+			
+			if richLeaderboardLabel then
+				richLeaderboardLabel.Text = text
+			end
+		end
+	end)
 
 	-- Gestisci i giocatori correnti ed entranti
 	Players.PlayerAdded:Connect(assignPlotToPlayer)
